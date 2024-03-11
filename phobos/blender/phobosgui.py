@@ -1759,6 +1759,16 @@ def dynamicLabel(text, uiLayout, context=None, width=300, icon=None):
         if nextLine != "":
             uiLayout.label(text=nextLine, icon=icon if icon and firstLine else "NONE")
 
+def updateSidebar():
+    """
+    Redraws the blender sidebar. Use when changing an object's property does not
+    trigger a redraw to avoid confusion.
+    """
+    for window in bpy.context.window_manager.windows:
+        for area in window.screen.areas:
+            if area.type == 'PROPERTIES':
+                area.tag_redraw()
+
 
 REGISTER_CLASSES = [
     ModelPoseProp,

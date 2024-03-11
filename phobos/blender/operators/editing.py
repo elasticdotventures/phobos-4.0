@@ -34,7 +34,7 @@ from bpy.types import Operator
 from idprop.types import IDPropertyGroup
 from phobos.io import hyrodyn
 
-from .. import defs as defs
+from .. import defs as defs, phobosgui
 from .. import display as display
 from ..io import phobos2blender, blender2phobos
 from ..model import controllers as controllermodel
@@ -514,6 +514,7 @@ class SetPhobosType(Operator):
 
         for obj in context.selected_objects:
             obj.phobostype = self.phobostype
+        phobosgui.updateSidebar()
         return {'FINISHED'}
 
     @classmethod
