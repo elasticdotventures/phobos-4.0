@@ -42,7 +42,7 @@ from ..model import inertia as inertialib
 from ..model import joints as jUtils
 from ..model import links as modellinks
 from ..phobosgui import prev_collections
-from ..phoboslog import log, ErrorMessageWithBox, WarnMessageWithBox
+from ..phoboslog import log, ErrorMessageWithBox, WarnMessageWithBox, InfoMessageWithBox
 from ..operators.generic import addObjectFromYaml, DynamicProperty, AddAnnotationsOperator, \
     EditAnnotationsOperator, AnnotationsOperator
 from ..utils import blender as bUtils
@@ -1985,9 +1985,7 @@ class RemoveMotorOperator(Operator):
                             removedMotors+=1
         if len(context.selected_objects) > 1 and removedMotors > 0:
             pluralS = "s" if removedMotors > 1 else ""
-            WarnMessageWithBox(message=f"{removedMotors} motor{pluralS} removed from selected objects",
-                               title="Phobos Message", icon="INFO")
-        print("Motor removed")
+        InfoMessageWithBox(message=f"{removedMotors} motor{pluralS} removed from selected objects")
         return {'FINISHED'}
 
     @classmethod

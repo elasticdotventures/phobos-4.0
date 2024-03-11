@@ -175,8 +175,8 @@ def find_calling_operator(frame):
 
 
 recentMessageBoxes = {}
-def ErrorMessageWithBox(message = "", title = "Phobos Error", icon = 'ERROR', reporter=None, silentFor=15):
-    """Display an error message
+def _MessageWithBox(message, title, icon, reporter, silentFor=15):
+    """Display a message box
 
     Args:
       message (str)
@@ -193,18 +193,21 @@ def ErrorMessageWithBox(message = "", title = "Phobos Error", icon = 'ERROR', re
             if timePassed < silentFor:
                 return
         recentMessageBoxes[message] = time.time()
+
     def draw(self, context):
         self.layout.label(text=message)
     bpy.context.window_manager.popup_menu(draw, title=title, icon=icon)
-    log(message, "ERROR")
     if reporter:
         reporter.report({"ERROR"}, "Phobos: "+message)
 
+def ErrorMessageWithBox(message="", title="Phobos Error", icon='ERROR', reporter=None, silentFor=15):
+    log(message, "ERROR")
+    return _MessageWithBox(message=message, title=title, icon=icon, reporter=reporter, silentFor=silentFor)
 
-def WarnMessageWithBox(message = "", title = "Phobos Warning", icon = 'ERROR', reporter=None):
-    def draw(self, context):
-        self.layout.label(text=message)
-    bpy.context.window_manager.popup_menu(draw, title=title, icon=icon)
+def WarnMessageWithBox(message="", title="Phobos Warning", icon='ERROR', reporter=None, silentFor=15):
     log(message, "WARNING")
-    if reporter:
-        reporter.report({"WARNING"}, "Phobos: "+message)
+    return _MessageWithBox(message=message, title=title, icon=icon, reporter=reporter, silentFor=silentFor)
+
+def InfoMessageWithBox(message="", title="Phobos Info", icon='INFO', reporter=None, silentFor=15):
+    log(message, "INFO")
+    return _MessageWithBox(message=message, title=title, icon=icon, reporter=reporter, silentFor=silentFor)
