@@ -1643,16 +1643,16 @@ class DefineJointConstraintsOperator(Operator):
 
             if sAxis2:
                 if type(sAxis2) == str:
-                    layout.prop(self, "axis", text=sAxis2)
+                    layout.prop(self, "axis2", text=sAxis2)
                 else:
-                    layout.prop(self, "axis", text="Joint Axis 2")
+                    layout.prop(self, "axis2", text="Joint Axis 2")
                 if sAxisLimit:
                     if sAxisLimitAngle:
-                        layout.prop(self, "lower", text="lower [rad]" if self.useRadian else "lower [°]")
-                        layout.prop(self, "upper", text="upper [rad]" if self.useRadian else "upper [°]")
+                        layout.prop(self, "lower2", text="lower [rad]" if self.useRadian else "lower [°]")
+                        layout.prop(self, "upper2", text="upper [rad]" if self.useRadian else "upper [°]")
                     else:
-                        layout.prop(self, "lower", text="lower [m]")
-                        layout.prop(self, "upper", text="upper [m]")
+                        layout.prop(self, "lower2", text="lower [m]")
+                        layout.prop(self, "upper2", text="upper [m]")
 
                 if sAxisEffort:
                     # max effort
