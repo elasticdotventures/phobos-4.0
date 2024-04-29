@@ -124,7 +124,10 @@ def setJointConstraints(
     effort=None,
     maxeffort_approximation=None,
     maxspeed_approximation=None,
-    axis = None
+    axis = None,
+    axis2 = None,
+    gearboxreferencebody=None,
+    gearboxratio=None
 ):
     """Sets the constraints for a given joint and jointtype.
     
@@ -177,17 +180,18 @@ def setJointConstraints(
         joint.pose.bones[0].constraints.remove(cons)
 
     # set axis
-    if axis is not None:
-        if mathutils.Vector(tuple(axis)).length == 0.:
-            log('Axis of joint {0} is of zero length: '.format(joint.name), 'ERROR')
-        axis = (np.array(axis) / np.linalg.norm(axis)).tolist()
-        if np.linalg.norm(axis) != 0:
-            bpy.ops.object.mode_set(mode='EDIT')
-            editbone = joint.data.edit_bones[0]
-            length = max(editbone.length, 0.1)  # make sure we do not have zero length
-            joint["joint/axis"] = mathutils.Vector(tuple(axis))
-            editbone.tail = editbone.head + mathutils.Vector(tuple(axis)).normalized() * length
-            bpy.ops.object.mode_set(mode='POSE')
+    for axis, parameter in [(axis, "joint/axis"), (axis2, "joint/axis2")]:
+        if axis is not None:
+            if mathutils.Vector(tuple(axis)).length == 0.:
+                log('Axis of joint {0} is of zero length: '.format(joint.name), 'ERROR')
+            axis = (np.array(axis) / np.linalg.norm(axis)).tolist()
+            if np.linalg.norm(axis) != 0:
+                bpy.ops.object.mode_set(mode='EDIT')
+                editbone = joint.data.edit_bones[0]
+                length = max(editbone.length, 0.1)  # make sure we do not have zero length
+                joint[parameter] = mathutils.Vector(tuple(axis))
+                editbone.tail = editbone.head + mathutils.Vector(tuple(axis)).normalized() * length
+                bpy.ops.object.mode_set(mode='POSE')
 
     # add spring & damping
     if jointtype in ['revolute', 'prismatic'] and (spring or damping):
@@ -258,6 +262,13 @@ def setJointConstraints(
     if resource_obj:
         log("Assigned resource to {}.".format(joint.name), 'DEBUG')
         joint.pose.bones[0].custom_shape = resource_obj
+
+    # gearbox
+    if gearboxreferencebody is not None:
+        joint['joint/gearbox/referencebody'] = gearboxreferencebody
+
+    if gearboxratio is not None:
+        joint['joint/gearbox/ratio'] = gearboxratio
 
 
 def getJointType(joint):

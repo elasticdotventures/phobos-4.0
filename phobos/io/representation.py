@@ -1721,10 +1721,11 @@ class Joint(Representation, SmurfBase):
                         "joint_dependencies"]
 
     def __init__(self, name=None, parent=None, child=None, joint_type=None,
-                 axis=None, origin=None, limit=None,
+                 axis=None, axis2=None, origin=None, limit=None,
                  dynamics=None, safety_controller=None, calibration=None,
                  mimic=None, joint_dependencies=None, motor=None,
-                 noDataPackage=None, reducedDataPackage=None, cut_joint=False, constraint_axes=None, **kwargs):
+                 noDataPackage=None, reducedDataPackage=None, cut_joint=False, constraint_axes=None,
+                 gearbox_ratio=None, gearbox_reference_body=None, **kwargs):
         assert name is not None
         self.name = name
         self.returns = ['name']
@@ -1737,6 +1738,7 @@ class Joint(Representation, SmurfBase):
         assert self.child is not None
         self.joint_type = joint_type if joint_type is not None else (kwargs["type"] if "type" in kwargs else None)
         assert self.joint_type is not None, f"Joint type of {self.name} undefined!"
+        # axis
         if axis is not None and np.linalg.norm(axis) != 0.:
             self.axis = (np.array(axis)/np.linalg.norm(axis)).tolist() if joint_type in ['revolute', 'continuous', 'prismatic'] else None
         elif axis is not None and np.linalg.norm(axis) == 0. and joint_type == "fixed":
@@ -1747,6 +1749,18 @@ class Joint(Representation, SmurfBase):
             self.axis = [0, 0, 1]
         else:
             self.axis = None
+        # axis2
+        if axis2 is not None and np.linalg.norm(axis2) != 0.:
+            self.axis2 = (np.array(axis2)/np.linalg.norm(axis2)).tolist() if joint_type in ['revolute', 'continuous', 'prismatic'] else None
+        elif axis2 is not None and np.linalg.norm(axis2) == 0. and joint_type == "fixed":
+            log.debug(f'Axis of fixed joint {self.name} is of zero length, setting axis2 to None!')
+            self.axis2 = None
+        elif axis2 is not None and np.linalg.norm(axis2) == 0. and joint_type != "fixed":
+            log.error(f'Axis of {joint_type} joint {self.name} is of zero length, setting axis2 to (0,0,1)!')
+            self.axis2 = [0, 0, 1]
+        else:
+            self.axis2 = None
+        #
         if origin is None and cut_joint is False:
             log.debug(f"Created joint {name} without specified origin assuming zero-transformation")
             origin = Pose(xyz=[0, 0, 0], rpy=[0, 0, 0], relative_to=self.parent)
@@ -1761,6 +1775,10 @@ class Joint(Representation, SmurfBase):
         self.cut_joint = cut_joint
         self.constraint_axes = _plural(constraint_axes)
         self.motor = str(motor) if motor is not None else None
+
+        self.gearbox_ratio = gearbox_ratio
+        self.gearbox_reference_body = gearbox_reference_body
+
         self.noDataPackage = noDataPackage
         self.returns += ["noDataPackage"]
         self.reducedDataPackage = reducedDataPackage

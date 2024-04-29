@@ -1507,6 +1507,30 @@ class DefineJointConstraintsOperator(Operator):
         name="Joint Axis", default=[0.0, 0.0, 1], description="Damping constant of the joint", size=3
     )
 
+    axis2: FloatVectorProperty(
+        name="2nd Joint Axis", default=[0.0, 0.0, 1], description="Damping constant of the joint", size=3
+    )
+
+    def reference_bodies(self, context):
+        return [
+            (link["joint/name"],)*3 for link in bpy.data.objects
+            if link.phobostype == "link" and link not in context.selected_objects
+               and "joint/name" in link
+        ]
+
+    reference_body: EnumProperty(
+        name='Gearbox Reference Body',
+        default=0,
+        description="Gearbox Reference Body",
+        items=reference_bodies,
+    )
+
+    gearbox_ratio: FloatProperty(
+        name='Gearbox Ratio',
+        description='theta 2 = -gearbox ratio * theta 1',
+    )
+
+
     def draw(self, context):
         """
 
@@ -1526,24 +1550,45 @@ class DefineJointConstraintsOperator(Operator):
         # enable/disable optional parameters
         if not self.joint_type == 'fixed':
             layout.prop(self, "active", text="Active (adds a default motor you can adapt later)")
-            if self.joint_type in ["revolute", "prismatic", "continuous"]:
-                layout.prop(self, "axis", text="Sets the joint axis")
+
+            # reference body
+            if self.joint_type == 'gearbox':
+                layout.prop(self, "reference_body", text="Ref. Body")
+
+            # axis
+            if self.joint_type in ["revolute", "prismatic", "continuous", "revolute2"]:
+                layout.prop(self, "axis", text="Joint Axis")
+            if self.joint_type == "revolute2":
+                layout.prop(self, "axis2", text="Joint Axis 2")
+            if self.joint_type == "gearbox":
+                layout.prop(self, "axis", text="Axis for theta 1 (ref to parent)")
+                layout.prop(self, "axis2", text="Axis for theta 2 (ref to child)")
+
+            # checkbox radian/degrees
             if self.joint_type == "revolute":
                 layout.prop(self, "useRadian", text="use radian")
-            layout.prop(
-                self,
-                "maxeffort",
-                text="max effort ["
-                + ('Nm]' if self.joint_type in ['revolute', 'continuous'] else 'N]'),
-            )
-            if self.joint_type in ['revolute', 'continuous']:
+
+            # effort, velocity
+            if self.joint_type != "gearbox":
+                # max effort
                 layout.prop(
                     self,
-                    "maxvelocity",
-                    text="max velocity [" + ("rad/s]" if self.useRadian else "°/s]"),
+                    "maxeffort",
+                    text="max effort ["
+                    + ('Nm]' if self.joint_type in ['revolute', 'continuous'] else 'N]'),
                 )
-            else:
-                layout.prop(self, "maxvelocity", text="max velocity [m/s]")
+
+                # max velocity in angle/s or distance/s
+                if self.joint_type in ['revolute', 'continuous']:
+                    layout.prop(
+                        self,
+                        "maxvelocity",
+                        text="max velocity [" + ("rad/s]" if self.useRadian else "°/s]"),
+                    )
+                else:
+                    layout.prop(self, "maxvelocity", text="max velocity [m/s]")
+
+            # other properties
             if self.joint_type == 'revolute':
                 layout.prop(self, "lower", text="lower [rad]" if self.useRadian else "lower [°]")
                 layout.prop(self, "upper", text="upper [rad]" if self.useRadian else "upper [°]")
@@ -1554,6 +1599,8 @@ class DefineJointConstraintsOperator(Operator):
                 layout.prop(self, "upper", text="upper [m]")
                 layout.prop(self, "spring", text="spring constant [N/m]")
                 layout.prop(self, "damping", text="damping constant")
+            elif self.joint_type == 'gearbox':
+                layout.prop(self, "gearbox_ratio", text="Gearbox Ratio")
 
     def invoke(self, context, event):
         """
@@ -1592,10 +1639,15 @@ class DefineJointConstraintsOperator(Operator):
 
         """
         log('Defining joint constraints for joint: ', 'INFO')
-        lower = 0
-        upper = 0
+        lower = None
+        upper = None
         velocity = self.maxvelocity
         effort = self.maxeffort
+        reference_body = None
+        gearbox_ratio = None
+        if self.joint_type == "gearbox":
+            reference_body = self.reference_body
+            gearbox_ratio = self.gearbox_ratio
 
         # lower and upper limits
         if self.joint_type in ["revolute", "continuous", "sphere"]:
@@ -1614,14 +1666,28 @@ class DefineJointConstraintsOperator(Operator):
         elif self.joint_type == "prismatic":
             lower = self.lower
             upper = self.upper
+
+        # valid input ?
         axis = None
+        axis2 = None
         validInput = True
-        if self.joint_type in ["revolute", "prismatic", "continuous"]:
+        if self.joint_type in ["revolute", "prismatic", "continuous", "gearbox"]:
             axis = self.axis
 
             # Check if joints can be created
             if max(axis) == 0 and min(axis) == 0:
                 validInput = False
+            else:
+                axis = (np.array(axis) / np.linalg.norm(axis)).tolist()
+        if self.joint_type in ["gearbox"]:
+            axis2 = self.axis2
+
+            # Check if joints can be created
+            if max(axis2) == 0 and min(axis2) == 0:
+                validInput = False
+            else:
+                axis2 = (np.array(axis2) / np.linalg.norm(axis2)).tolist()
+
         # set properties for each joint
         if validInput:
             for joint in (obj for obj in context.selected_objects if obj.phobostype == 'link'):
@@ -1640,7 +1706,10 @@ class DefineJointConstraintsOperator(Operator):
                     effort=effort,
                     spring=self.spring,
                     damping=self.damping,
-                    axis=(np.array(axis) / np.linalg.norm(axis)).tolist() if axis is not None else None
+                    axis=axis,
+                    axis2=axis2,
+                    gearboxreferencebody=reference_body,
+                    gearboxratio=gearbox_ratio
                 )
 
                 if "joint/name" not in joint:

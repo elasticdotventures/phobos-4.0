@@ -859,11 +859,29 @@
           "value_children": {
             "xyz": "axis"
           }
+        },
+        "axis2": {
+          "tag": "axis2",
+          "children": {
+            "limit": {
+              "classname": "JointLimit",
+              "varname": "limit"
+            },
+            "dynamics": {
+              "classname": "JointDynamics",
+              "varname": "dynamics"
+            }
+          },
+          "value_children": {
+            "xyz": "axis2"
+          }
         }
       },
       "value_children": {
         "parent": "parent",
-        "child": "child"
+        "child": "child",
+        "gearbox_ratio": "gearbox_ratio",
+        "gearbox_reference_body": "gearbox_reference_body"
       }
     },
     "JointLimit": {
