@@ -1544,6 +1544,8 @@ class DefineJointConstraintsOperator(Operator):
         description='theta 2 = -gearbox ratio * theta 1',
         default=1
     )
+    
+    executeMessage = []
 
     def draw(self, context):
         """
@@ -1682,6 +1684,9 @@ class DefineJointConstraintsOperator(Operator):
             if sDamping:
                 layout.prop(self, "damping", text="damping constant")
 
+        for msg in self.executeMessage:
+            layout.label(text=msg)
+
 
     def invoke(self, context, event):
         """
@@ -1720,8 +1725,11 @@ class DefineJointConstraintsOperator(Operator):
 
         """
         log('Defining joint constraints for joint: ', 'INFO')
+        self.executeMessage = []
         lower = None
         upper = None
+        lower = 0
+        upper = 0
         velocity = self.maxvelocity
         effort = self.maxeffort
         reference_body = None
@@ -1758,6 +1766,7 @@ class DefineJointConstraintsOperator(Operator):
             # Check if joints can be created
             if max(axis) == 0 and min(axis) == 0:
                 validInput = False
+                self.executeMessage.append("Please set the joint axis to define the joint")
             else:
                 axis = (np.array(axis) / np.linalg.norm(axis)).tolist()
         if self.joint_type in ["gearbox"]:
@@ -1766,11 +1775,13 @@ class DefineJointConstraintsOperator(Operator):
             # Check if joints can be created
             if max(axis2) == 0 and min(axis2) == 0:
                 validInput = False
+                self.executeMessage.append("Please set the joint axis2 to define the joint")
             else:
                 axis2 = (np.array(axis2) / np.linalg.norm(axis2)).tolist()
 
         # set properties for each joint
         if validInput:
+            defined = 0
             for joint in (obj for obj in context.selected_objects if obj.phobostype == 'link'):
                 context.view_layer.objects.active = joint
                 if joint.parent is None or joint.parent.phobostype != "link":
@@ -1792,6 +1803,7 @@ class DefineJointConstraintsOperator(Operator):
                     gearboxreferencebody=reference_body,
                     gearboxratio=gearbox_ratio
                 )
+                defined = defined+1
 
                 if "joint/name" not in joint:
                     joint["joint/name"] = joint.name + "_joint"
@@ -1806,6 +1818,8 @@ class DefineJointConstraintsOperator(Operator):
                         ),
                         linkobj=joint
                     )
+            jointPluralS = "" if defined == 1 else "s"
+            self.executeMessage.append(f"Defined {defined} joint{jointPluralS}")
 
         return {'FINISHED'}
 
