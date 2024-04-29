@@ -1495,6 +1495,20 @@ class DefineJointConstraintsOperator(Operator):
        description="Maximum velocity of the joint. If you uncheck radian, you can enter °/sec here",
     )
 
+    lower2: FloatProperty(name="Lower", default=-3.14, description="Lower constraint of the joint")
+
+    upper2: FloatProperty(name="Upper", default=3.14, description="Upper constraint of the joint")
+
+    maxeffort2: FloatProperty(
+       name="Max Effort (N or Nm)", default=0.0, description="Maximum effort of the joint"
+    )
+
+    maxvelocity2: FloatProperty(
+       name="Max Velocity (m/s or rad/s)",
+       default=0.0,
+       description="Maximum velocity of the joint. If you uncheck radian, you can enter °/sec here",
+    )
+
     spring : FloatProperty(
         name="Spring Constant", default=0.0, description="Spring constant of the joint"
     )
@@ -1528,8 +1542,8 @@ class DefineJointConstraintsOperator(Operator):
     gearbox_ratio: FloatProperty(
         name='Gearbox Ratio',
         description='theta 2 = -gearbox ratio * theta 1',
+        default=1
     )
-
 
     def draw(self, context):
         """
@@ -1549,35 +1563,72 @@ class DefineJointConstraintsOperator(Operator):
 
         # enable/disable optional parameters
         if not self.joint_type == 'fixed':
+            sRefBody = False
+            sAxis = False
+            sAxisLimit = False
+            sAxisLimitAngle = False
+            sAxisEffort = False
+            sAxisVelocity = False
+            sAxis2 = False
+            sSpring = False
+            sDamping = False
+
             layout.prop(self, "active", text="Active (adds a default motor you can adapt later)")
 
             # reference body
             if self.joint_type == 'gearbox':
-                layout.prop(self, "reference_body", text="Ref. Body")
+                sRefBody = True
 
             # axis
-            if self.joint_type in ["revolute", "prismatic", "continuous", "revolute2"]:
-                layout.prop(self, "axis", text="Joint Axis")
+            if self.joint_type in ["revolute", "prismatic", "continuous", "planar", "revolute2"]:
+                sAxis = True
+            if self.joint_type in ["revolute", "prismatic", "continuous", "planar", "floating", "revolute2"]:
+                sAxisEffort = True
+                sAxisVelocity = True
+            if self.joint_type in ["revolute", "prismatic", "revolute2"]:
+                sAxisLimit = True
+                if self.joint_type in ["revolute", "revolute2"]:
+                    sAxisLimitAngle = True
             if self.joint_type == "revolute2":
-                layout.prop(self, "axis2", text="Joint Axis 2")
+                sAxis2 = True
             if self.joint_type == "gearbox":
-                layout.prop(self, "axis", text="Axis for theta 1 (ref to parent)")
-                layout.prop(self, "axis2", text="Axis for theta 2 (ref to child)")
+                sAxis = "Axis for theta 1 (ref to parent)"
+                sAxis2 = "Axis for theta 2 (ref to child)"
 
-            # checkbox radian/degrees
-            if self.joint_type == "revolute":
-                layout.prop(self, "useRadian", text="use radian")
+            # spring, damping
+            if self.joint_type in ["revolute", "prismatic", "revolute2"]:
+                sSpring = True
+                sDamping = True
 
-            # effort, velocity
-            if self.joint_type != "gearbox":
+            # display
+
+            if sRefBody:
+                layout.prop(self, "reference_body", text="Ref. Body")
+                layout.prop(self, "gearbox_ratio", text="Gearbox Ratio")
+
+            if sAxis:
+                if type(sAxis) == str:
+                    layout.prop(self, "axis", text=sAxis)
+                else:
+                    layout.prop(self, "axis", text="Joint Axis")
+                if sAxisLimit:
+                    if sAxisLimitAngle:
+                        layout.prop(self, "lower", text="lower [rad]" if self.useRadian else "lower [°]")
+                        layout.prop(self, "upper", text="upper [rad]" if self.useRadian else "upper [°]")
+                    else:
+                        layout.prop(self, "lower", text="lower [m]")
+                        layout.prop(self, "upper", text="upper [m]")
+
+            if sAxisEffort:
                 # max effort
                 layout.prop(
                     self,
                     "maxeffort",
                     text="max effort ["
-                    + ('Nm]' if self.joint_type in ['revolute', 'continuous'] else 'N]'),
+                         + ('Nm]' if self.joint_type in ['revolute', 'continuous'] else 'N]'),
                 )
 
+            if sAxisVelocity:
                 # max velocity in angle/s or distance/s
                 if self.joint_type in ['revolute', 'continuous']:
                     layout.prop(
@@ -1588,19 +1639,49 @@ class DefineJointConstraintsOperator(Operator):
                 else:
                     layout.prop(self, "maxvelocity", text="max velocity [m/s]")
 
-            # other properties
-            if self.joint_type == 'revolute':
-                layout.prop(self, "lower", text="lower [rad]" if self.useRadian else "lower [°]")
-                layout.prop(self, "upper", text="upper [rad]" if self.useRadian else "upper [°]")
+            if sAxis2:
+                if type(sAxis2) == str:
+                    layout.prop(self, "axis", text=sAxis2)
+                else:
+                    layout.prop(self, "axis", text="Joint Axis 2")
+                if sAxisLimit:
+                    if sAxisLimitAngle:
+                        layout.prop(self, "lower", text="lower [rad]" if self.useRadian else "lower [°]")
+                        layout.prop(self, "upper", text="upper [rad]" if self.useRadian else "upper [°]")
+                    else:
+                        layout.prop(self, "lower", text="lower [m]")
+                        layout.prop(self, "upper", text="upper [m]")
+
+                if sAxisEffort:
+                    # max effort
+                    layout.prop(
+                        self,
+                        "maxeffort2",
+                        text="max effort ["
+                             + ('Nm]' if self.joint_type in ['revolute', 'continuous'] else 'N]'),
+                    )
+
+                if sAxisVelocity:
+                    # max velocity in angle/s or distance/s
+                    if self.joint_type in ['revolute', 'continuous']:
+                        layout.prop(
+                            self,
+                            "maxvelocity2",
+                            text="max velocity [" + ("rad/s]" if self.useRadian else "°/s]"),
+                        )
+                    else:
+                        layout.prop(self, "maxvelocity", text="max velocity [m/s]") #TODO sAxisVelocityMS
+
+            # checkbox radian/degrees
+            if sAxisLimitAngle:
+                layout.prop(self, "useRadian", text="use radian")
+
+            if sSpring:
                 layout.prop(self, "spring", text="spring constant [N/m]")
+
+            if sDamping:
                 layout.prop(self, "damping", text="damping constant")
-            elif self.joint_type == 'prismatic':
-                layout.prop(self, "lower", text="lower [m]")
-                layout.prop(self, "upper", text="upper [m]")
-                layout.prop(self, "spring", text="spring constant [N/m]")
-                layout.prop(self, "damping", text="damping constant")
-            elif self.joint_type == 'gearbox':
-                layout.prop(self, "gearbox_ratio", text="Gearbox Ratio")
+
 
     def invoke(self, context, event):
         """
