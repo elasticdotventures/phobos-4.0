@@ -225,6 +225,8 @@ def setJointConstraints(
         pass
     elif jointtype == 'planar':
         set_planar(joint)
+    elif jointtype == 'ball':
+        set_ball(joint, upper)
     else:
         log("Unknown joint type for joint " + joint.name + ". Behaviour like floating.", 'WARNING')
     joint['joint/type'] = jointtype
@@ -257,18 +259,18 @@ def setJointConstraints(
                     'ERROR',
                 )
 
-    # set link/joint visualization
-    resource_obj = ioUtils.getResource(('joint', jointtype))
-    if resource_obj:
-        log("Assigned resource to {}.".format(joint.name), 'DEBUG')
-        joint.pose.bones[0].custom_shape = resource_obj
-
     # gearbox
     if gearboxreferencebody is not None:
         joint['joint/gearbox/referencebody'] = gearboxreferencebody
 
     if gearboxratio is not None:
         joint['joint/gearbox/ratio'] = gearboxratio
+
+    # set link/joint visualization
+    resource_obj = ioUtils.getResource(('joint', jointtype))
+    if resource_obj:
+        log("Assigned resource to {}.".format(joint.name), 'DEBUG')
+        joint.pose.bones[0].custom_shape = resource_obj
 
 
 def getJointType(joint):
@@ -537,13 +539,12 @@ def set_planar(joint):
     crot.owner_space = 'LOCAL'
 
 
-def set_ball(joint):
+def set_ball(joint, limit):
     """
 
     Args:
       joint:
-      lower:
-      upper:
+      limit:
 
     Returns:
 
@@ -561,5 +562,11 @@ def set_ball(joint):
     # fix rotation x, z
     bpy.ops.pose.constraint_add(type='LIMIT_ROTATION')
     crot = getJointConstraint(joint, 'LIMIT_ROTATION')
+    crot.use_limit_x = True
+    crot.min_x = -limit
+    crot.max_x = limit
+    crot.use_limit_z = True
+    crot.min_z = -limit
+    crot.max_z = limit
     crot.owner_space = 'LOCAL'
 
