@@ -1518,11 +1518,11 @@ class DefineJointConstraintsOperator(Operator):
     )
 
     axis: FloatVectorProperty(
-        name="Joint Axis", default=[0.0, 0.0, 1], description="Damping constant of the joint", size=3
+        name="Joint Axis", default=[0.0, 0.0, 1], description="First joint axis", size=3
     )
 
     axis2: FloatVectorProperty(
-        name="2nd Joint Axis", default=[0.0, 0.0, 1], description="Damping constant of the joint", size=3
+        name="2nd Joint Axis", default=[1, 0.0, 0], description="Second joint axis", size=3
     )
 
     def __init__(self):
@@ -1577,14 +1577,14 @@ class DefineJointConstraintsOperator(Operator):
             self.sRefBody = True
 
         # axis
-        if self.joint_type in ["revolute", "prismatic", "continuous", "planar"]:
+        if self.joint_type in ["revolute", "prismatic", "continuous", "planar", "universal"]:
             self.sAxis = True
-        if self.joint_type in ["revolute", "prismatic", "continuous", "planar", "floating"]:
+        if self.joint_type in ["revolute", "prismatic", "continuous", "planar", "floating", "universal"]:
             self.sEffort = True
             self.sVelocity = True
-        if self.joint_type in ["revolute", "prismatic"]:
+        if self.joint_type in ["revolute", "prismatic", "universal"]:
             self.sLimit = True
-            if self.joint_type in ["revolute"]:
+            if self.joint_type in ["revolute", "universal"]:
                 self.sLimitAngle = True
         if self.joint_type == "ball":
             self.sAxis = True
@@ -1594,6 +1594,8 @@ class DefineJointConstraintsOperator(Operator):
         if self.joint_type == "gearbox":
             self.sAxis = "Axis for theta 1 (ref to parent)"
             self.sAxis2 = "Axis for theta 2 (ref to child)"
+        if self.joint_type == "universal":
+            self.sAxis2 = True
 
         # spring, damping
         if self.joint_type in ["revolute", "prismatic"]:
@@ -1749,8 +1751,11 @@ class DefineJointConstraintsOperator(Operator):
         """
         log('Defining joint constraints for joint: ', 'INFO')
         self.executeMessage = []
+        self.setOptionalParameters()
         lower = None
         upper = None
+        lower2 = None
+        upper2 = None
         velocity = self.maxvelocity
         effort = self.maxeffort
         reference_body = None
@@ -1782,12 +1787,17 @@ class DefineJointConstraintsOperator(Operator):
             if not self.useRadian:
                 lower = lower * math.pi / 180
                 upper = upper * math.pi / 180
+        elif self.joint_type == "universal":
+            lower = self.lower
+            upper = self.upper
+            lower2 = self.lower2
+            upper2 = self.upper2
 
         # valid input ?
         axis = None
         axis2 = None
         validInput = True
-        if self.joint_type in ["revolute", "prismatic", "continuous", "gearbox"]:
+        if self.joint_type in ["revolute", "prismatic", "continuous", "gearbox", "universal"]:
             axis = self.axis
 
             # Check if joints can be created
@@ -1796,7 +1806,7 @@ class DefineJointConstraintsOperator(Operator):
                 self.executeMessage.append("Please set the joint axis to define the joint")
             else:
                 axis = (np.array(axis) / np.linalg.norm(axis)).tolist()
-        if self.joint_type in ["gearbox"]:
+        if self.joint_type in ["gearbox", "universal"]:
             axis2 = self.axis2
 
             # Check if joints can be created
@@ -1822,6 +1832,8 @@ class DefineJointConstraintsOperator(Operator):
                     jointtype=self.joint_type,
                     lower=lower if self.sLimit else None,
                     upper=upper if self.sLimit else None,
+                    lower2=lower2 if self.sLimit and self.sAxis2 else None,
+                    upper2=upper2 if self.sLimit and self.sAxis2 else None,
                     velocity=velocity if self.sVelocity else None,
                     effort=effort if self.sEffort else None,
                     spring=self.spring if self.sSpring else None,

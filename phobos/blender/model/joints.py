@@ -21,6 +21,8 @@ from ..phoboslog import log
 from ..utils import io as ioUtils
 from ..utils.validation import validate
 
+from ..reserved_keys import JOINT_KEYS
+
 
 def getJointConstraints(joint):
     """Returns the constraints defined in the joint as tuple of two lists.
@@ -118,6 +120,8 @@ def setJointConstraints(
     jointtype,
     lower=0.0,
     upper=0.0,
+    lower2=0.0,
+    upper2=0.0,
     spring=None,
     damping=None,
     velocity=None,
@@ -210,6 +214,8 @@ def setJointConstraints(
     # set constraints accordingly
     joint['joint/limits/lower'] = lower
     joint['joint/limits/upper'] = upper
+    joint['joint/limits/lower2'] = lower2
+    joint['joint/limits/upper2'] = upper2
     joint.data.bones.active = joint.pose.bones[0].bone
     joint.data.bones.active.select = True
     if jointtype == 'revolute':
@@ -227,6 +233,8 @@ def setJointConstraints(
         set_planar(joint)
     elif jointtype == 'ball':
         set_ball(joint, upper)
+    elif jointtype == 'universal':
+        set_universal(joint, lower, upper, lower2, upper2)
     else:
         log("Unknown joint type for joint " + joint.name + ". Behaviour like floating.", 'WARNING')
     joint['joint/type'] = jointtype
@@ -271,6 +279,12 @@ def setJointConstraints(
     if resource_obj:
         log("Assigned resource to {}.".format(joint.name), 'DEBUG')
         joint.pose.bones[0].custom_shape = resource_obj
+
+    # delete unused properties
+    for key in JOINT_KEYS:
+        key = "joint/"+key
+        if key in joint and joint[key] is None:
+            del joint[key]
 
 
 def getJointType(joint):
@@ -570,3 +584,36 @@ def set_ball(joint, limit):
     crot.max_z = limit
     crot.owner_space = 'LOCAL'
 
+def set_universal(joint, lower, upper, lower2, upper2):
+    """
+
+    Args:
+      upper2:
+      lower2:
+      upper:
+      lower:
+      joint:
+
+    Returns:
+
+    """
+    # fix location
+    bpy.ops.pose.constraint_add(type='LIMIT_LOCATION')
+    cloc = getJointConstraint(joint, 'LIMIT_LOCATION')
+    cloc.use_min_x = True
+    cloc.use_min_y = True
+    cloc.use_min_z = True
+    cloc.use_max_x = True
+    cloc.use_max_y = True
+    cloc.use_max_z = True
+    cloc.owner_space = 'LOCAL'
+    # fix rotation x, z
+    bpy.ops.pose.constraint_add(type='LIMIT_ROTATION')
+    crot = getJointConstraint(joint, 'LIMIT_ROTATION')
+    crot.use_limit_x = True
+    crot.min_x = lower
+    crot.max_x = upper
+    crot.use_limit_z = True
+    crot.min_z = lower2
+    crot.max_z = upper2
+    crot.owner_space = 'LOCAL'
