@@ -1536,6 +1536,7 @@ class DefineJointConstraintsOperator(Operator):
         self.sAxis2 = False  # Show second axis
         self.sSpring = False  # Show spring
         self.sDamping = False  # Show damping
+        self.sThreadPitch = True  # Show screw parameter
         self.setOptionalParameters()
 
     def reference_bodies(self, context):
@@ -1557,6 +1558,12 @@ class DefineJointConstraintsOperator(Operator):
         description='theta 2 = -gearbox ratio * theta 1',
         default=1
     )
+
+    screw_thread_pitch: FloatProperty(
+        name='Screw Thread Pitch',
+        description='Meters traveled per revolution',
+        default=1,
+    )
     
     executeMessage = []
 
@@ -1571,6 +1578,7 @@ class DefineJointConstraintsOperator(Operator):
         self.sAxis2 = False  # Show second axis
         self.sSpring = False  # Show spring
         self.sDamping = False  # Show damping
+        self.sThreadPitch = True
 
         # reference body
         if self.joint_type == 'gearbox':
@@ -1579,7 +1587,7 @@ class DefineJointConstraintsOperator(Operator):
         # axis
         if self.joint_type in ["revolute", "prismatic", "continuous", "planar", "universal"]:
             self.sAxis = True
-        if self.joint_type in ["revolute", "prismatic", "continuous", "planar", "floating", "universal"]:
+        if self.joint_type in ["revolute", "prismatic", "continuous", "planar", "floating", "universal", "screw"]:
             self.sEffort = True
             self.sVelocity = True
         if self.joint_type in ["revolute", "prismatic", "universal"]:
@@ -1596,6 +1604,11 @@ class DefineJointConstraintsOperator(Operator):
             self.sAxis2 = "Axis for theta 2 (ref to child)"
         if self.joint_type == "universal":
             self.sAxis2 = True
+        if self.joint_type == "screw":
+            self.sLimit = True
+            self.sLimitAngle = True
+            self.sAxis = True
+            self.sThreadPitch = True
 
         # spring, damping
         if self.joint_type in ["revolute", "prismatic"]:
@@ -1699,15 +1712,18 @@ class DefineJointConstraintsOperator(Operator):
                     else:
                         layout.prop(self, "maxvelocity", text="max velocity [m/s]") #TODO sAxisVelocityMS
 
-            # checkbox radian/degrees
-            if self.sLimitAngle:
-                layout.prop(self, "useRadian", text="use radian")
-
             if self.sSpring:
                 layout.prop(self, "spring", text="spring constant [N/m]")
 
             if self.sDamping:
                 layout.prop(self, "damping", text="damping constant")
+
+            if self.sThreadPitch:
+                layout.prop(self, "screw_thread_pitch")
+
+            # checkbox radian/degrees
+            if self.sLimitAngle:
+                layout.prop(self, "useRadian", text="use radian")
 
         for msg in self.executeMessage:
             layout.label(text=msg)
@@ -1797,7 +1813,8 @@ class DefineJointConstraintsOperator(Operator):
         axis = None
         axis2 = None
         validInput = True
-        if self.joint_type in ["revolute", "prismatic", "continuous", "gearbox", "universal"]:
+        screw_thread_pitch = self.screw_thread_pitch
+        if self.joint_type in ["revolute", "prismatic", "continuous", "gearbox", "universal", "screw"]:
             axis = self.axis
 
             # Check if joints can be created
@@ -1815,6 +1832,10 @@ class DefineJointConstraintsOperator(Operator):
                 self.executeMessage.append("Please set the joint axis2 to define the joint")
             else:
                 axis2 = (np.array(axis2) / np.linalg.norm(axis2)).tolist()
+        if self.joint_type == "screw":
+            if screw_thread_pitch == 0:
+                validInput = False
+                self.executeMessage.append("Cannot create a screw joint with thread pitch 0")
 
         # set properties for each joint
         if validInput:
@@ -1842,6 +1863,7 @@ class DefineJointConstraintsOperator(Operator):
                     axis2=axis2 if self.sAxis2 else None,
                     gearboxreferencebody=reference_body if self.sRefBody else None,
                     gearboxratio=gearbox_ratio if self.sRefBody else None,
+                    screwthreadpitch=screw_thread_pitch if self.sThreadPitch else None,
                 )
                 defined = defined+1
 

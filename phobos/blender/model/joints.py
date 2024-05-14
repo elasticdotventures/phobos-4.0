@@ -12,6 +12,7 @@
 """
 Contains the functions required to model a joint within Blender.
 """
+import math
 
 import bpy
 import mathutils
@@ -22,6 +23,8 @@ from ..utils import io as ioUtils
 from ..utils.validation import validate
 
 from ..reserved_keys import JOINT_KEYS
+
+from scipy.spatial.transform import Rotation
 
 
 def getJointConstraints(joint):
@@ -131,7 +134,8 @@ def setJointConstraints(
     axis = None,
     axis2 = None,
     gearboxreferencebody=None,
-    gearboxratio=None
+    gearboxratio=None,
+    screwthreadpitch=None,
 ):
     """Sets the constraints for a given joint and jointtype.
     
@@ -184,17 +188,17 @@ def setJointConstraints(
         joint.pose.bones[0].constraints.remove(cons)
 
     # set axis
-    for axis, parameter in [(axis, "joint/axis"), (axis2, "joint/axis2")]:
-        if axis is not None:
-            if mathutils.Vector(tuple(axis)).length == 0.:
+    for ax, parameter in [(axis, "joint/axis"), (axis2, "joint/axis2")]:
+        if ax is not None:
+            if mathutils.Vector(tuple(ax)).length == 0.:
                 log('Axis of joint {0} is of zero length: '.format(joint.name), 'ERROR')
-            axis = (np.array(axis) / np.linalg.norm(axis)).tolist()
-            if np.linalg.norm(axis) != 0:
+            ax = (np.array(ax) / np.linalg.norm(ax)).tolist()
+            if np.linalg.norm(ax) != 0:
                 bpy.ops.object.mode_set(mode='EDIT')
                 editbone = joint.data.edit_bones[0]
                 length = max(editbone.length, 0.1)  # make sure we do not have zero length
-                joint[parameter] = mathutils.Vector(tuple(axis))
-                editbone.tail = editbone.head + mathutils.Vector(tuple(axis)).normalized() * length
+                joint[parameter] = mathutils.Vector(tuple(ax))
+                editbone.tail = editbone.head + mathutils.Vector(tuple(ax)).normalized() * length
                 bpy.ops.object.mode_set(mode='POSE')
 
     # add spring & damping
@@ -235,6 +239,8 @@ def setJointConstraints(
         set_ball(joint, upper)
     elif jointtype == 'universal':
         set_universal(joint, lower, upper, lower2, upper2)
+    elif jointtype == 'screw':
+        set_screw(joint, lower, upper, axis, screwthreadpitch)
     else:
         log("Unknown joint type for joint " + joint.name + ". Behaviour like floating.", 'WARNING')
     joint['joint/type'] = jointtype
@@ -273,6 +279,10 @@ def setJointConstraints(
 
     if gearboxratio is not None:
         joint['joint/gearbox/ratio'] = gearboxratio
+
+    # screw
+    if screwthreadpitch is not None:
+        joint['joint/screw/threadpitch'] = screwthreadpitch
 
     # set link/joint visualization
     resource_obj = ioUtils.getResource(('joint', jointtype))
@@ -617,3 +627,153 @@ def set_universal(joint, lower, upper, lower2, upper2):
     crot.min_z = lower2
     crot.max_z = upper2
     crot.owner_space = 'LOCAL'
+
+
+def rotation_matrix(axis, theta):
+    """
+    Return the rotation matrix associated with counterclockwise rotation about
+    the given axis by theta radians.
+    """
+    axis = np.asarray(axis)
+    axis = axis / math.sqrt(np.dot(axis, axis))
+    a = math.cos(theta / 2.0)
+    b, c, d = -axis * math.sin(theta / 2.0)
+    aa, bb, cc, dd = a * a, b * b, c * c, d * d
+    bc, ad, ac, ab, bd, cd = b * c, a * d, a * c, a * b, b * d, c * d
+    return np.array([[aa + bb - cc - dd, 2 * (bc + ad), 2 * (bd - ac)],
+                     [2 * (bc - ad), aa + cc - bb - dd, 2 * (cd + ab)],
+                     [2 * (bd + ac), 2 * (cd - ab), aa + dd - bb - cc]])
+
+
+def getScrewXYZ(axisx, axisy, axisz, rotation):
+    axis = np.array([axisx, axisy, axisz])
+    angle = np.radians(rotation)
+    matrix = rotation_matrix(axis, angle)
+    r = Rotation.from_matrix(matrix)
+    angles = r.as_euler("xyz", degrees=False)
+    return angles
+
+def getScrewX(axisx, axisy, axisz, rotation):
+    return getScrewXYZ(axisx, axisy, axisz, rotation)[0]
+
+def getScrewY(axisx, axisy, axisz, rotation):
+    return getScrewXYZ(axisx, axisy, axisz, rotation)[1]
+
+def getScrewZ(axisx, axisy, axisz, rotation):
+    return getScrewXYZ(axisx, axisy, axisz, rotation)[2]
+
+
+#TODO move to init/register
+bpy.app.driver_namespace['phobossx'] = getScrewX
+bpy.app.driver_namespace['phobossy'] = getScrewY
+bpy.app.driver_namespace['phobossz'] = getScrewZ
+
+def set_screw(joint, lower, upper, axis, pitch):
+    """
+
+    Args:
+      pitch: Meters traveled per revolution
+      joint:
+      lower:
+      upper:
+      axis:
+
+    Returns:
+
+    """
+    bpy.app.driver_namespace['phobossx'] = getScrewX
+    bpy.app.driver_namespace['phobossy'] = getScrewY
+    bpy.app.driver_namespace['phobossz'] = getScrewZ
+
+    # fix location except for y-axis
+    bpy.ops.pose.constraint_add(type='LIMIT_LOCATION')
+    cloc = getJointConstraint(joint, 'LIMIT_LOCATION')
+    cloc.use_min_x = True
+    cloc.use_min_y = True
+    cloc.use_min_z = True
+    cloc.use_max_x = True
+    cloc.use_max_y = True
+    cloc.use_max_z = True
+    if lower == upper:
+        cloc.use_min_y = False
+        cloc.use_max_y = False
+    else:
+        cloc.min_y = lower
+        cloc.max_y = upper
+    cloc.owner_space = 'LOCAL'
+    # fix rotation
+    bpy.ops.pose.constraint_add(type='LIMIT_ROTATION')
+    crot = getJointConstraint(joint, 'LIMIT_ROTATION')
+    crot.use_limit_x = True
+    crot.min_x = 0
+    crot.max_x = 0
+    crot.use_limit_y = True
+    crot.min_y = 0
+    crot.max_y = 0
+    crot.use_limit_z = True
+    crot.min_z = 0
+    crot.max_z = 0
+    crot.owner_space = 'LOCAL'
+
+    if axis:
+        # TODO remove existing drivers
+        # add screwdriver
+        axisName = ["x", "y", "z"]
+        rotationExpression = 0
+        for index, value in enumerate(axis):
+            if value != 0:
+                rotationExpression = f"{axis[index]/value/pitch*360}*{axisName[index]}"
+                break
+        for index, value in enumerate(axis):
+            fcurve = joint.driver_add("rotation_euler", index)
+            driver = fcurve.driver
+            # current axis
+            method = "phoboss"+axisName[index]
+            driver.expression = f"{method}({axis[0]}, {axis[1]}, {axis[2]}, {rotationExpression})"
+            # var x
+            variable = driver.variables.new()
+            variable.name = "x"
+            variable.type = "SINGLE_PROP"
+            target = variable.targets[0]
+            target.id = joint
+            target.data_path = "location[0]"
+            # var y
+            variable = driver.variables.new()
+            variable.name = "y"
+            variable.type = "SINGLE_PROP"
+            target = variable.targets[0]
+            target.id = joint
+            target.data_path = "location[1]"
+            # var z
+            variable = driver.variables.new()
+            variable.name = "z"
+            variable.type = "SINGLE_PROP"
+            target = variable.targets[0]
+            target.id = joint
+            target.data_path = "location[2]"
+
+        # add drivers to y/z axes
+        mainAxis = None
+        mainAxisValue = 0
+        for index, value in enumerate(axis):
+            if value != 0:
+                if mainAxis is None:
+                    mainAxis = index
+                    mainAxisValue = value
+                else:
+                    fcurve = joint.driver_add("location", index)
+                    driver = fcurve.driver
+
+                    # expression
+                    factor = value/mainAxisValue
+                    driver.expression = f"{axisName[mainAxis]}*{factor}"
+
+                    # var x
+                    variable = driver.variables.new()
+                    variable.name = axisName[mainAxis]
+                    variable.type = "SINGLE_PROP"
+                    target = variable.targets[0]
+                    target.id = joint
+                    target.data_path = f"location[{mainAxis}]"
+
+
