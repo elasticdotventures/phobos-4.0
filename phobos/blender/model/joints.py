@@ -629,45 +629,6 @@ def set_universal(joint, lower, upper, lower2, upper2):
     crot.owner_space = 'LOCAL'
 
 
-def rotation_matrix(axis, theta):
-    """
-    Return the rotation matrix associated with counterclockwise rotation about
-    the given axis by theta radians.
-    """
-    axis = np.asarray(axis)
-    axis = axis / math.sqrt(np.dot(axis, axis))
-    a = math.cos(theta / 2.0)
-    b, c, d = -axis * math.sin(theta / 2.0)
-    aa, bb, cc, dd = a * a, b * b, c * c, d * d
-    bc, ad, ac, ab, bd, cd = b * c, a * d, a * c, a * b, b * d, c * d
-    return np.array([[aa + bb - cc - dd, 2 * (bc + ad), 2 * (bd - ac)],
-                     [2 * (bc - ad), aa + cc - bb - dd, 2 * (cd + ab)],
-                     [2 * (bd + ac), 2 * (cd - ab), aa + dd - bb - cc]])
-
-
-def getScrewXYZ(axisx, axisy, axisz, rotation):
-    axis = np.array([axisx, axisy, axisz])
-    angle = np.radians(rotation)
-    matrix = rotation_matrix(axis, angle)
-    r = Rotation.from_matrix(matrix)
-    angles = r.as_euler("xyz", degrees=False)
-    return angles
-
-def getScrewX(axisx, axisy, axisz, rotation):
-    return getScrewXYZ(axisx, axisy, axisz, rotation)[0]
-
-def getScrewY(axisx, axisy, axisz, rotation):
-    return getScrewXYZ(axisx, axisy, axisz, rotation)[1]
-
-def getScrewZ(axisx, axisy, axisz, rotation):
-    return getScrewXYZ(axisx, axisy, axisz, rotation)[2]
-
-
-#TODO move to init/register
-bpy.app.driver_namespace['phobossx'] = getScrewX
-bpy.app.driver_namespace['phobossy'] = getScrewY
-bpy.app.driver_namespace['phobossz'] = getScrewZ
-
 def set_screw(joint, lower, upper, axis, pitch):
     """
 
@@ -681,9 +642,6 @@ def set_screw(joint, lower, upper, axis, pitch):
     Returns:
 
     """
-    bpy.app.driver_namespace['phobossx'] = getScrewX
-    bpy.app.driver_namespace['phobossy'] = getScrewY
-    bpy.app.driver_namespace['phobossz'] = getScrewZ
 
     # fix location except for y-axis
     bpy.ops.pose.constraint_add(type='LIMIT_LOCATION')
@@ -704,76 +662,47 @@ def set_screw(joint, lower, upper, axis, pitch):
     # fix rotation
     bpy.ops.pose.constraint_add(type='LIMIT_ROTATION')
     crot = getJointConstraint(joint, 'LIMIT_ROTATION')
-    crot.use_limit_x = True
+    crot.use_limit_x = False
     crot.min_x = 0
     crot.max_x = 0
-    crot.use_limit_y = True
+    crot.use_limit_y = False
     crot.min_y = 0
     crot.max_y = 0
-    crot.use_limit_z = True
+    crot.use_limit_z = False
     crot.min_z = 0
     crot.max_z = 0
     crot.owner_space = 'LOCAL'
 
+    bone = joint.pose.bones[0]
+    bone.rotation_mode = 'XYZ'
+
     if axis:
-        # TODO remove existing drivers
+        # remove existing drivers
+        for fcurve in joint.animation_data.drivers:
+            if fcurve.data_path == f'pose.bones["{bone.name}"].rotation_euler':
+                if fcurve.driver.variables[0].name == "phobosvar":
+                    
+                else:
+                    # TODO könnte Problem darstellen
+                    pass
         # add screwdriver
         axisName = ["x", "y", "z"]
-        rotationExpression = 0
+        maxValue = 0
+        maxIndex = 0
         for index, value in enumerate(axis):
-            if value != 0:
-                rotationExpression = f"{axis[index]/value/pitch*360}*{axisName[index]}"
-                break
-        for index, value in enumerate(axis):
-            fcurve = joint.driver_add("rotation_euler", index)
-            driver = fcurve.driver
-            # current axis
-            method = "phoboss"+axisName[index]
-            driver.expression = f"{method}({axis[0]}, {axis[1]}, {axis[2]}, {rotationExpression})"
-            # var x
-            variable = driver.variables.new()
-            variable.name = "x"
-            variable.type = "SINGLE_PROP"
-            target = variable.targets[0]
-            target.id = joint
-            target.data_path = "location[0]"
-            # var y
-            variable = driver.variables.new()
-            variable.name = "y"
-            variable.type = "SINGLE_PROP"
-            target = variable.targets[0]
-            target.id = joint
-            target.data_path = "location[1]"
-            # var z
-            variable = driver.variables.new()
-            variable.name = "z"
-            variable.type = "SINGLE_PROP"
-            target = variable.targets[0]
-            target.id = joint
-            target.data_path = "location[2]"
+            if value > maxValue:
+                maxValue = value
+                maxIndex = index
+        rotationExpression = f"phobosvar * {2 * math.pi / (maxValue * pitch)}"
+        fcurve = bone.driver_add("rotation_euler", 1)
+        driver = fcurve.driver
 
-        # add drivers to y/z axes
-        mainAxis = None
-        mainAxisValue = 0
-        for index, value in enumerate(axis):
-            if value != 0:
-                if mainAxis is None:
-                    mainAxis = index
-                    mainAxisValue = value
-                else:
-                    fcurve = joint.driver_add("location", index)
-                    driver = fcurve.driver
+        variable = driver.variables.new()
+        variable.name = "phobosvar"
+        variable.type = "TRANSFORMS"
+        target = variable.targets[0]
+        target.id = joint
+        target.bone_target = "Bone"
+        target.transform_type = f'LOC_{axisName[maxIndex].upper()}'
 
-                    # expression
-                    factor = value/mainAxisValue
-                    driver.expression = f"{axisName[mainAxis]}*{factor}"
-
-                    # var x
-                    variable = driver.variables.new()
-                    variable.name = axisName[mainAxis]
-                    variable.type = "SINGLE_PROP"
-                    target = variable.targets[0]
-                    target.id = joint
-                    target.data_path = f"location[{mainAxis}]"
-
-
+        driver.expression = rotationExpression

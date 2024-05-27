@@ -1794,7 +1794,7 @@ class DefineJointConstraintsOperator(Operator):
             else:
                 lower = self.lower
                 upper = self.upper
-        elif self.joint_type == "prismatic":
+        elif self.joint_type in ["prismatic", "screw"]:
             lower = self.lower
             upper = self.upper
         elif self.joint_type == "ball":
