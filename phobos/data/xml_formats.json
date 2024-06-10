@@ -881,7 +881,8 @@
         "parent": "parent",
         "child": "child",
         "gearbox_ratio": "gearbox_ratio",
-        "gearbox_reference_body": "gearbox_reference_body"
+        "gearbox_reference_body": "gearbox_reference_body",
+        "thread_pitch": "thread_pitch"
       }
     },
     "JointLimit": {

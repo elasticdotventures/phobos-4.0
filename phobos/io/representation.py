@@ -1725,7 +1725,7 @@ class Joint(Representation, SmurfBase):
                  dynamics=None, safety_controller=None, calibration=None,
                  mimic=None, joint_dependencies=None, motor=None,
                  noDataPackage=None, reducedDataPackage=None, cut_joint=False, constraint_axes=None,
-                 gearbox_ratio=None, gearbox_reference_body=None, **kwargs):
+                 gearbox_ratio=None, gearbox_reference_body=None, thread_pitch=None, **kwargs):
         assert name is not None
         self.name = name
         self.returns = ['name']
@@ -1778,6 +1778,8 @@ class Joint(Representation, SmurfBase):
 
         self.gearbox_ratio = gearbox_ratio
         self.gearbox_reference_body = gearbox_reference_body
+
+        self.thread_pitch = thread_pitch
 
         self.noDataPackage = noDataPackage
         self.returns += ["noDataPackage"]

@@ -504,7 +504,8 @@ def deriveJoint(obj, logging=False, adjust=False, errors=None):
         ) if "joint/mimic/joint" in values.keys() else None,
         motor=values.get("motor/name", None),
         gearbox_ratio=values.get("joint/gearbox/ratio", None),
-        gearbox_reference_body=values.get("joint/gearbox/referencebody", None)
+        gearbox_reference_body=values.get("joint/gearbox/referencebody", None),
+        thread_pitch=values.get("joint/screw/threadpitch", None),
     )
 
 
