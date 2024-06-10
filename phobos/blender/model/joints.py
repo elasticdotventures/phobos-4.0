@@ -222,6 +222,7 @@ def setJointConstraints(
     joint['joint/limits/upper2'] = upper2
     joint.data.bones.active = joint.pose.bones[0].bone
     joint.data.bones.active.select = True
+    remove_screwdrivers(joint)
     if jointtype == 'revolute':
         set_revolute(joint, lower, upper)
     elif jointtype == 'continuous':
@@ -594,6 +595,7 @@ def set_ball(joint, limit):
     crot.max_z = limit
     crot.owner_space = 'LOCAL'
 
+
 def set_universal(joint, lower, upper, lower2, upper2):
     """
 
@@ -629,6 +631,18 @@ def set_universal(joint, lower, upper, lower2, upper2):
     crot.owner_space = 'LOCAL'
 
 
+def remove_screwdrivers(joint):
+    bone = joint.pose.bones[0]
+    if joint.animation_data is not None and joint.animation_data.drivers is not None:
+        for fcurve in joint.animation_data.drivers:
+            if fcurve.data_path == f'pose.bones["{bone.name}"].rotation_euler':
+                if fcurve.driver.variables[0].name == "phobosvar":
+                    joint.animation_data.drivers.remove(fcurve)
+                else:
+                    # TODO This is not our driver, it could interfere with our drivers
+                    pass
+
+
 def set_screw(joint, lower, upper, axis, pitch):
     """
 
@@ -662,13 +676,13 @@ def set_screw(joint, lower, upper, axis, pitch):
     # fix rotation
     bpy.ops.pose.constraint_add(type='LIMIT_ROTATION')
     crot = getJointConstraint(joint, 'LIMIT_ROTATION')
-    crot.use_limit_x = False
+    crot.use_limit_x = True
     crot.min_x = 0
     crot.max_x = 0
     crot.use_limit_y = False
     crot.min_y = 0
     crot.max_y = 0
-    crot.use_limit_z = False
+    crot.use_limit_z = True
     crot.min_z = 0
     crot.max_z = 0
     crot.owner_space = 'LOCAL'
@@ -677,14 +691,6 @@ def set_screw(joint, lower, upper, axis, pitch):
     bone.rotation_mode = 'XYZ'
 
     if axis:
-        # remove existing drivers
-        for fcurve in joint.animation_data.drivers:
-            if fcurve.data_path == f'pose.bones["{bone.name}"].rotation_euler':
-                if fcurve.driver.variables[0].name == "phobosvar":
-                    
-                else:
-                    # TODO könnte Problem darstellen
-                    pass
         # add screwdriver
         axisName = ["x", "y", "z"]
         maxValue = 0
