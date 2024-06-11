@@ -865,7 +865,7 @@
           "children": {
             "limit": {
               "classname": "JointLimit",
-              "varname": "limit"
+              "varname": "limit2"
             },
             "dynamics": {
               "classname": "JointDynamics",
@@ -882,6 +882,7 @@
         "child": "child",
         "gearbox_ratio": "gearbox_ratio",
         "gearbox_reference_body": "gearbox_reference_body",
+        "screw_thread_pitch": "screw_thread_pitch",
         "thread_pitch": "thread_pitch"
       }
     },

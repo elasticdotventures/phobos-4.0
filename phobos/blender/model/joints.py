@@ -276,14 +276,14 @@ def setJointConstraints(
 
     # gearbox
     if gearboxreferencebody is not None:
-        joint['joint/gearbox/referencebody'] = gearboxreferencebody
+        joint['joint/gearbox/reference_body'] = gearboxreferencebody
 
     if gearboxratio is not None:
         joint['joint/gearbox/ratio'] = gearboxratio
 
     # screw
     if screwthreadpitch is not None:
-        joint['joint/screw/threadpitch'] = screwthreadpitch
+        joint['joint/screw/thread_pitch'] = screwthreadpitch
 
     # set link/joint visualization
     resource_obj = ioUtils.getResource(('joint', jointtype))

@@ -473,8 +473,8 @@ def deriveJoint(obj, logging=False, adjust=False, errors=None):
         ErrorMessageWithBox(msg)
         raise KeyError("joint/type: "+msg)
 
-    axis = list(values.get("joint/axis", [0, 0, 1])) if values["joint/type"] in ["revolute", "prismatic", "continuous"] else None
-    axis2 = list(values.get("joint/axis2", [0, 0, 1])) if values["joint/type"] in ["gearbox"] else None
+    axis = list(values.get("joint/axis")) if "joint/axis" in values else None
+    axis2 = list(values.get("joint/axis2")) if "joint/axis2" in values else None
 
     return representation.Joint(
         name=values.get("joint/name", obj.name),
@@ -490,6 +490,12 @@ def deriveJoint(obj, logging=False, adjust=False, errors=None):
             lower=values.get("joint/limits/lower", None),
             upper=values.get("joint/limits/upper", None)
         ) if any([k.startswith("joint/limits/") for k in values.keys()]) else None,
+        limit2=representation.JointLimit(
+            effort=values.get("joint/limits/effort", None),
+            velocity=values.get("joint/limits/velocity", None),
+            lower=values.get("joint/limits/lower2", None),
+            upper=values.get("joint/limits/upper2", None)
+        ) if "joint/limits/lower2" in values or "joint/limits/upper2" in values else None,
         dynamics=representation.JointDynamics(
             damping=values.get("joint/dynamics/damping", None),
             friction=values.get("joint/dynamics/friction", None),
@@ -504,8 +510,8 @@ def deriveJoint(obj, logging=False, adjust=False, errors=None):
         ) if "joint/mimic/joint" in values.keys() else None,
         motor=values.get("motor/name", None),
         gearbox_ratio=values.get("joint/gearbox/ratio", None),
-        gearbox_reference_body=values.get("joint/gearbox/referencebody", None),
-        thread_pitch=values.get("joint/screw/threadpitch", None),
+        gearbox_reference_body=values.get("joint/gearbox/reference_body", None),
+        screw_thread_pitch=values.get("joint/screw/thread_pitch", None),
     )
 
 

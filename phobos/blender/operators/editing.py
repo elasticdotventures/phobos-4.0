@@ -1536,7 +1536,7 @@ class DefineJointConstraintsOperator(Operator):
         self.sAxis2 = False  # Show second axis
         self.sSpring = False  # Show spring
         self.sDamping = False  # Show damping
-        self.sThreadPitch = True  # Show screw parameter
+        self.sThreadPitch = False  # Show screw parameter
         self.setOptionalParameters()
 
     def reference_bodies(self, context):
@@ -1578,7 +1578,7 @@ class DefineJointConstraintsOperator(Operator):
         self.sAxis2 = False  # Show second axis
         self.sSpring = False  # Show spring
         self.sDamping = False  # Show damping
-        self.sThreadPitch = True
+        self.sThreadPitch = False  # Show screw parameter
 
         # reference body
         if self.joint_type == 'gearbox':
@@ -1606,7 +1606,6 @@ class DefineJointConstraintsOperator(Operator):
             self.sAxis2 = True
         if self.joint_type == "screw":
             self.sLimit = True
-            self.sLimitAngle = True
             self.sAxis = True
             self.sThreadPitch = True
 
