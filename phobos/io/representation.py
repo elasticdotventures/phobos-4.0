@@ -1779,7 +1779,7 @@ class Joint(Representation, SmurfBase):
         self.gearbox_reference_body = gearbox_reference_body
 
         self.screw_thread_pitch = screw_thread_pitch
-        self.thread_pitch = - 2 * math.pi / screw_thread_pitch
+        self.thread_pitch = - 2 * math.pi / screw_thread_pitch if screw_thread_pitch is not None else None
 
         self.noDataPackage = noDataPackage
         self.returns += ["noDataPackage"]
