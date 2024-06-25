@@ -1,5 +1,5 @@
 JOINT_KEYS = ["name", "axis", "type", "parent", "child",
-              "limits/lower", "limits/upper", "limits/effort", "limits/velocity",
+              "limits/lower", "limits/upper", "limits/effort", "limits/velocity", "limits/effort2", "limits/velocity2",
               "dynamics/friction", "dynamics/spring_stiffness", "dynamics/damping", "dynamics/spring_reference",
               "pose", "joint_relative_origin", "origin", "gearbox/ratio", "gearbox/reference_body",
               "limits/lower2", "limits/upper2", "screw/thread_pitch"]

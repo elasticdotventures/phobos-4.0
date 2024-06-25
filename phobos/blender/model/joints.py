@@ -129,6 +129,8 @@ def setJointConstraints(
     damping=None,
     velocity=None,
     effort=None,
+    velocity2=None,
+    effort2=None,
     maxeffort_approximation=None,
     maxspeed_approximation=None,
     axis = None,
@@ -161,18 +163,6 @@ def setJointConstraints(
     Returns:
 
     """
-    if lower is None:
-        lower = 0.0
-    if upper is None:
-        upper = 0.0
-    if velocity is None:
-        velocity = 0.0
-    if effort is None:
-        effort = 0.0
-    if spring is None:
-        spring = 0.0
-    if damping is None:
-        damping = 0.0
 
     bpy.ops.object.select_all(action='DESELECT')
     joint.select_set(True)
@@ -248,31 +238,32 @@ def setJointConstraints(
     bpy.ops.object.mode_set(mode='OBJECT')
 
     # check for approximation functions of effort and speed
-    if jointtype in ['revolute', 'continuous', 'prismatic']:
-        joint['joint/limits/velocity'] = velocity
-        joint['joint/limits/effort'] = effort
-        if maxeffort_approximation:
-            if all(elem in ['function', 'coefficients'] for elem in maxeffort_approximation):
-                joint['joint/limits/maxeffort_approximation'] = maxeffort_approximation['function']
-                joint['joint/limits/maxeffort_coefficients'] = maxeffort_approximation['coefficients']
-            else:
-                log(
-                    "Approximation for max effort ill-defined in joint object {}.".format(
-                        joint.name
-                    ),
-                    'ERROR',
-                )
-        if maxspeed_approximation:
-            if all(elem in ['function', 'coefficients'] for elem in maxspeed_approximation):
-                joint['joint/limits/maxspeed_approximation'] = maxspeed_approximation['function']
-                joint['joint/limits/maxspeed_coefficients'] = maxspeed_approximation['coefficients']
-            else:
-                log(
-                    "Approximation for max speed ill-defined in joint object {}.".format(
-                        joint.name
-                    ),
-                    'ERROR',
-                )
+    joint['joint/limits/velocity'] = velocity
+    joint['joint/limits/effort'] = effort
+    joint['joint/limits/velocity2'] = velocity2
+    joint['joint/limits/effort2'] = effort2
+    if maxeffort_approximation:
+        if all(elem in ['function', 'coefficients'] for elem in maxeffort_approximation):
+            joint['joint/limits/maxeffort_approximation'] = maxeffort_approximation['function']
+            joint['joint/limits/maxeffort_coefficients'] = maxeffort_approximation['coefficients']
+        else:
+            log(
+                "Approximation for max effort ill-defined in joint object {}.".format(
+                    joint.name
+                ),
+                'ERROR',
+            )
+    if maxspeed_approximation:
+        if all(elem in ['function', 'coefficients'] for elem in maxspeed_approximation):
+            joint['joint/limits/maxspeed_approximation'] = maxspeed_approximation['function']
+            joint['joint/limits/maxspeed_coefficients'] = maxspeed_approximation['coefficients']
+        else:
+            log(
+                "Approximation for max speed ill-defined in joint object {}.".format(
+                    joint.name
+                ),
+                'ERROR',
+            )
 
     # gearbox
     joint['joint/gearbox/reference_body'] = gearboxreferencebody

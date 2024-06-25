@@ -1533,6 +1533,7 @@ class DefineJointConstraintsOperator(Operator):
         self.sLimitAngle = False  # Limits are angles instead of meters
         self.sEffort = False  # Show max axis effort
         self.sVelocity = False  # Show max axis velocity (meters/s or angle/s)
+        self.sVelocityAngle = False  # Max velocity is angle/s instead of meters/s
         self.sAxis2 = False  # Show second axis
         self.sSpring = False  # Show spring
         self.sDamping = False  # Show damping
@@ -1575,6 +1576,7 @@ class DefineJointConstraintsOperator(Operator):
         self.sLimitAngle = False  # Limits are angles instead of meters
         self.sEffort = False  # Show max axis effort
         self.sVelocity = False  # Show max axis velocity (meters/s or angle/s)
+        self.sVelocityAngle = False  # Max velocity is angle/s instead of meters/s
         self.sAxis2 = False  # Show second axis
         self.sSpring = False  # Show spring
         self.sDamping = False  # Show damping
@@ -1590,6 +1592,8 @@ class DefineJointConstraintsOperator(Operator):
         if self.joint_type in ["revolute", "prismatic", "continuous", "planar", "floating", "universal", "screw"]:
             self.sEffort = True
             self.sVelocity = True
+            if self.joint_type in ['revolute', 'continuous']:
+                self.sVelocityAngle = True
         if self.joint_type in ["revolute", "prismatic", "universal"]:
             self.sLimit = True
             if self.joint_type in ["revolute", "universal"]:
@@ -1669,7 +1673,7 @@ class DefineJointConstraintsOperator(Operator):
 
             if self.sVelocity:
                 # max velocity in angle/s or distance/s
-                if self.joint_type in ['revolute', 'continuous']:
+                if self.sVelocityAngle:
                     layout.prop(
                         self,
                         "maxvelocity",
@@ -1702,14 +1706,14 @@ class DefineJointConstraintsOperator(Operator):
 
                 if self.sVelocity:
                     # max velocity in angle/s or distance/s
-                    if self.joint_type in ['revolute', 'continuous']:
+                    if self.sVelocityAngle:
                         layout.prop(
                             self,
                             "maxvelocity2",
                             text="max velocity [" + ("rad/s]" if self.useRadian else "°/s]"),
                         )
                     else:
-                        layout.prop(self, "maxvelocity", text="max velocity [m/s]") #TODO sAxisVelocityMS
+                        layout.prop(self, "maxvelocity2", text="max velocity [m/s]")
 
             if self.sSpring:
                 layout.prop(self, "spring", text="spring constant [N/m]")
@@ -1773,6 +1777,8 @@ class DefineJointConstraintsOperator(Operator):
         upper2 = None
         velocity = self.maxvelocity
         effort = self.maxeffort
+        velocity2 = self.maxvelocity2
+        effort2 = self.maxeffort2
         reference_body = None
         gearbox_ratio = None
         if self.joint_type == "gearbox":
@@ -1780,12 +1786,10 @@ class DefineJointConstraintsOperator(Operator):
             gearbox_ratio = self.gearbox_ratio
 
         # lower and upper limits
-        if self.joint_type in ["revolute", "continuous", "sphere"]:
+        if self.joint_type in ["revolute", "continuous"]:
             # velocity calculation
             if not self.useRadian:
                 velocity = self.maxvelocity * ((2 * math.pi) / 360)  # from °/s to rad/s
-            else:
-                velocity = self.maxvelocity
         if self.joint_type == 'revolute':
             if not self.useRadian:
                 lower = math.radians(self.lower)
@@ -1856,6 +1860,8 @@ class DefineJointConstraintsOperator(Operator):
                     upper2=upper2 if self.sLimit and self.sAxis2 else None,
                     velocity=velocity if self.sVelocity else None,
                     effort=effort if self.sEffort else None,
+                    velocity2=velocity2 if self.sAxis2 and self.sVelocity else None,
+                    effort2=effort2 if self.sAxis2 and self.sEffort else None,
                     spring=self.spring if self.sSpring else None,
                     damping=self.damping if self.sDamping else None,
                     axis=axis if self.sAxis else None,
