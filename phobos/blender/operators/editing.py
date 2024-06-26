@@ -1614,7 +1614,7 @@ class DefineJointConstraintsOperator(Operator):
             self.sThreadPitch = True
 
         # spring, damping
-        if self.joint_type in ["revolute", "prismatic"]:
+        if self.joint_type in ["revolute", "prismatic", "universal"]:
             self.sSpring = True
             self.sDamping = True
 

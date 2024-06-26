@@ -192,7 +192,7 @@ def setJointConstraints(
                 bpy.ops.object.mode_set(mode='POSE')
 
     # add spring & damping
-    if jointtype in ['revolute', 'prismatic'] and (spring or damping):
+    if spring or damping:
         try:
             bpy.ops.rigidbody.constraint_add(type='GENERIC_SPRING')
             bpy.context.object.rigid_body_constraint.spring_stiffness_y = spring
