@@ -17,6 +17,7 @@ import math
 import bpy
 import mathutils
 import numpy as np
+from bpy.app.handlers import persistent
 
 from ..phoboslog import log
 from ..utils import io as ioUtils
@@ -193,17 +194,9 @@ def setJointConstraints(
 
     # add spring & damping
     if spring or damping:
-        try:
-            bpy.ops.rigidbody.constraint_add(type='GENERIC_SPRING')
-            bpy.context.object.rigid_body_constraint.spring_stiffness_y = spring
-            bpy.context.object.rigid_body_constraint.spring_damping_y = damping
-        except RuntimeError:
-            log("No Blender Rigid Body World present, only adding custom properties.", 'ERROR')
-
-        # TODO we should make sure that the rigid body constraints gets changed
-        # if the values below are changed manually by the user
         joint['joint/dynamics/spring_stiffness'] = spring
         joint['joint/dynamics/damping'] = damping
+        applySpringDamping(joint)
 
     # set constraints accordingly
     joint['joint/limits/lower'] = lower
@@ -283,6 +276,87 @@ def setJointConstraints(
         key = "joint/"+key
         if key in joint and joint[key] is None:
             del joint[key]
+
+
+@persistent
+def load_handler(dummy):
+    bpy.app.handlers.depsgraph_update_post.append(sdUpdater)
+
+
+bpy.app.handlers.load_post.append(load_handler)
+
+sdUpdaterObj = None
+sdUpdaterDamping = 0
+sdUpdaterSpring = 0
+springKey = 'joint/dynamics/spring_stiffness'
+dampingKey = 'joint/dynamics/damping'
+
+def sdUpdater(scene):
+    """
+    Updates spring and damping if the values are changed by the user
+    """
+    global sdUpdaterObj, sdUpdaterDamping, sdUpdaterSpring
+    obj = bpy.context.object
+
+    if obj is None:
+        return
+
+    if sdUpdaterObj == obj:
+        changeDetected = False
+
+        # See if damping changed
+        if dampingKey in obj:
+            damping = obj[dampingKey]
+            if damping != sdUpdaterDamping:
+                changeDetected = True
+
+        # See if spring changed
+        if springKey in obj:
+            spring = obj[springKey]
+            if spring != sdUpdaterSpring:
+                changeDetected = True
+
+        # Apply new constraint if either changed
+        if changeDetected:
+            applySpringDamping(obj)
+
+    else:  # A new object was selected, remember spring and damping
+        sdUpdaterObj = obj
+        sdUpdaterDamping = obj[dampingKey] if dampingKey in obj else None
+        sdUpdaterSpring = obj[springKey] if springKey in obj else None
+
+
+def applySpringDamping(joint):
+    """
+    Adds a rigid body constraint to a joint
+    """
+    global sdUpdaterObj, sdUpdaterDamping, sdUpdaterSpring
+
+    # Read spring and damping from joint
+    spring = joint[springKey] if springKey in joint else 0
+    damping = joint[dampingKey] if dampingKey in joint else 0
+
+    # Remember values of selected object
+    sdUpdaterSpring = spring
+    sdUpdaterDamping = damping
+    sdUpdaterObj = joint
+
+    if spring == 0 and damping == 0:
+        # Remove constraint
+        bpy.ops.rigidbody.constraint_remove()
+    else:
+        # Add new constraint if it's not present
+        constraintExists = joint.rigid_body_constraint is not None
+        try:
+            if not constraintExists:
+                bpy.ops.rigidbody.constraint_add(type='GENERIC_SPRING')
+            # Add spring and damping via rigid body constraint
+            bpy.context.object.rigid_body_constraint.spring_stiffness_y = spring
+            bpy.context.object.rigid_body_constraint.spring_damping_y = damping
+            bpy.context.object.rigid_body_constraint.use_spring_y = True
+        except RuntimeError:
+            log("No Blender Rigid Body World present, only adding custom properties.", 'ERROR')
+
 
 
 def getJointType(joint):
