@@ -1522,7 +1522,7 @@ class DefineJointConstraintsOperator(Operator):
     )
 
     axis2: FloatVectorProperty(
-        name="2nd Joint Axis", default=[1, 0.0, 0], description="Second joint axis", size=3
+        name="2nd Joint Axis", default=[0.0, 0.0, 1], description="Second joint axis", size=3
     )
 
     def __init__(self):
@@ -1599,7 +1599,6 @@ class DefineJointConstraintsOperator(Operator):
             if self.joint_type in ["revolute", "universal"]:
                 self.sLimitAngle = True
         if self.joint_type == "ball":
-            self.sAxis = True
             self.sLimit = True
             self.sLimitEqual = True
             self.sLimitAngle = True
