@@ -139,6 +139,7 @@ def setJointConstraints(
     gearboxreferencebody=None,
     gearboxratio=None,
     screwthreadpitch=None,
+    visualaxis=None,
 ):
     """Sets the constraints for a given joint and jointtype.
     
@@ -184,13 +185,16 @@ def setJointConstraints(
             if mathutils.Vector(tuple(ax)).length == 0.:
                 log('Axis of joint {0} is of zero length: '.format(joint.name), 'ERROR')
             ax = (np.array(ax) / np.linalg.norm(ax)).tolist()
-            if np.linalg.norm(ax) != 0:
-                bpy.ops.object.mode_set(mode='EDIT')
-                editbone = joint.data.edit_bones[0]
-                length = max(editbone.length, 0.1)  # make sure we do not have zero length
-                joint[parameter] = mathutils.Vector(tuple(ax))
-                editbone.tail = editbone.head + mathutils.Vector(tuple(ax)).normalized() * length
-                bpy.ops.object.mode_set(mode='POSE')
+
+    # rotate joint object
+    visualaxis = visualaxis if visualaxis is not None else axis
+    if np.linalg.norm(visualaxis) != 0:
+        bpy.ops.object.mode_set(mode='EDIT')
+        editbone = joint.data.edit_bones[0]
+        length = max(editbone.length, 0.1)  # make sure we do not have zero length
+        joint[parameter] = mathutils.Vector(tuple(visualaxis))
+        editbone.tail = editbone.head + mathutils.Vector(tuple(visualaxis)).normalized() * length
+        bpy.ops.object.mode_set(mode='POSE')
 
     # add spring & damping
     if spring or damping:

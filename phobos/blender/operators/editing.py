@@ -1455,6 +1455,21 @@ class SetCollisionGroupOperator(Operator):
         return ob is not None and ob.phobostype == 'collision' and ob.mode == 'OBJECT'
 
 
+def getOrthogonal(axis1, axis2):
+    """
+    Returns an axis orthogonal to two given orthogonal axes
+    """
+    return np.cross(axis1, axis2)
+
+
+def isOrthogonal(axis1, axis2):
+    """
+    See if two axes are orthogonal
+    """
+    scalarProduct = axis1[0] * axis2[0] + axis1[1] * axis2[1] + axis1[2] * axis2[2]
+    return scalarProduct == 0
+
+
 class DefineJointConstraintsOperator(Operator):
     """Add bone constraints to the joint (link)"""
 
@@ -1462,15 +1477,15 @@ class DefineJointConstraintsOperator(Operator):
     bl_label = "Define Joint(s)"
     bl_options = {'REGISTER', 'UNDO'}
 
-    name : StringProperty(
+    name: StringProperty(
         name='Joint Name', default="", description='Defines the name of the joint (leave empty for same name as link)'
     )
 
-    active : BoolProperty(
+    active: BoolProperty(
         name='Active', default=False, description='Add a motor to the joint'
     )
 
-    useRadian : BoolProperty(
+    useRadian: BoolProperty(
         name='Use Radian', default=True, description='Use degrees or rad for joints'
     )
 
@@ -1481,9 +1496,9 @@ class DefineJointConstraintsOperator(Operator):
         items=defs.jointtypes,
     )
 
-    lower : FloatProperty(name="Lower", default=-3.14, description="Lower constraint of the joint")
+    lower: FloatProperty(name="Lower", default=-3.14, description="Lower constraint of the joint")
 
-    upper : FloatProperty(name="Upper", default=3.14, description="Upper constraint of the joint")
+    upper: FloatProperty(name="Upper", default=3.14, description="Upper constraint of the joint")
 
     maxeffort : FloatProperty(
        name="Max Effort (N or Nm)", default=0.0, description="Maximum effort of the joint"
@@ -1509,11 +1524,11 @@ class DefineJointConstraintsOperator(Operator):
        description="Maximum velocity of the joint. If you uncheck radian, you can enter °/sec here",
     )
 
-    spring : FloatProperty(
+    spring: FloatProperty(
         name="Spring Constant", default=0.0, description="Spring constant of the joint"
     )
 
-    damping : FloatProperty(
+    damping: FloatProperty(
         name="Damping Constant", default=0.0, description="Damping constant of the joint"
     )
 
@@ -1524,21 +1539,6 @@ class DefineJointConstraintsOperator(Operator):
     axis2: FloatVectorProperty(
         name="2nd Joint Axis", default=[0.0, 0.0, 1], description="Second joint axis", size=3
     )
-
-    def __init__(self):
-        self.sRefBody = False  # Show gearbox options: reference body drop down and gearbox ratio
-        self.sAxis = False  # Show first axis
-        self.sLimit = False  # Show axis limits
-        self.sLimitEqual = False  # Upper and lower limits are the same
-        self.sLimitAngle = False  # Limits are angles instead of meters
-        self.sEffort = False  # Show max axis effort
-        self.sVelocity = False  # Show max axis velocity (meters/s or angle/s)
-        self.sVelocityAngle = False  # Max velocity is angle/s instead of meters/s
-        self.sAxis2 = False  # Show second axis
-        self.sSpring = False  # Show spring
-        self.sDamping = False  # Show damping
-        self.sThreadPitch = False  # Show screw parameter
-        self.setOptionalParameters()
 
     def reference_bodies(self, context):
         return [
@@ -1565,7 +1565,27 @@ class DefineJointConstraintsOperator(Operator):
         description='Meters traveled per revolution',
         default=1,
     )
-    
+
+    flipAxis: BoolProperty(
+        name='Flip Visual Axis', default=False, description='Flip calculated axis'
+    )
+
+    def __init__(self):
+        self.sRefBody = False  # Show gearbox options: reference body drop down and gearbox ratio
+        self.sAxis = False  # Show first axis
+        self.sLimit = False  # Show axis limits
+        self.sLimitEqual = False  # Upper and lower limits are the same
+        self.sLimitAngle = False  # Limits are angles instead of meters
+        self.sEffort = False  # Show max axis effort
+        self.sVelocity = False  # Show max axis velocity (meters/s or angle/s)
+        self.sVelocityAngle = False  # Max velocity is angle/s instead of meters/s
+        self.sAxis2 = False  # Show second axis
+        self.sSpring = False  # Show spring
+        self.sDamping = False  # Show damping
+        self.sThreadPitch = False  # Show screw parameter
+        self.sAxisFlip = False  # Show checkbox to flip calculated axis
+        self.setOptionalParameters()
+
     executeMessage = []
 
     def setOptionalParameters(self):
@@ -1581,6 +1601,7 @@ class DefineJointConstraintsOperator(Operator):
         self.sSpring = False  # Show spring
         self.sDamping = False  # Show damping
         self.sThreadPitch = False  # Show screw parameter
+        self.sAxisFlip = False  # Show checkbox to flip calculated axis
 
         # reference body
         if self.joint_type == 'gearbox':
@@ -1607,6 +1628,7 @@ class DefineJointConstraintsOperator(Operator):
             self.sAxis2 = "Axis for theta 2 (ref to child)"
         if self.joint_type == "universal":
             self.sAxis2 = True
+            self.sAxisFlip = True
         if self.joint_type == "screw":
             self.sLimit = True
             self.sAxis = True
@@ -1727,6 +1749,10 @@ class DefineJointConstraintsOperator(Operator):
             if self.sLimitAngle:
                 layout.prop(self, "useRadian", text="use radian")
 
+            # checkbox flip axis
+            if self.sAxisFlip:
+                layout.prop(self, "flipAxis", text="flip visual axis")
+
         for msg in self.executeMessage:
             layout.label(text=msg)
 
@@ -1816,6 +1842,7 @@ class DefineJointConstraintsOperator(Operator):
         axis2 = None
         validInput = True
         screw_thread_pitch = self.screw_thread_pitch
+        visual_axis = None
         if self.joint_type in ["revolute", "prismatic", "continuous", "gearbox", "universal", "screw"]:
             axis = self.axis
 
@@ -1834,6 +1861,18 @@ class DefineJointConstraintsOperator(Operator):
                 self.executeMessage.append("Please set the joint axis2 to define the joint")
             else:
                 axis2 = (np.array(axis2) / np.linalg.norm(axis2)).tolist()
+                if self.joint_type == "universal":
+                    if not isOrthogonal(axis, axis2):
+                        self.executeMessage.append("Axes should be orthogonal")
+                    else:
+                        visual_axis = getOrthogonal(axis, axis2)
+                        if self.flipAxis:
+                            visual_axis = -visual_axis
+                        formatter = {
+                            "float": lambda x: f"{x:.3g}" if x != int(x) else str(int(x))
+                        }
+                        vis = np.array2string(visual_axis, precision=3, suppress_small=True, formatter=formatter)
+                        self.executeMessage.append("Visual axis: "+vis)
         if self.joint_type == "screw":
             if screw_thread_pitch == 0:
                 validInput = False
@@ -1868,6 +1907,7 @@ class DefineJointConstraintsOperator(Operator):
                     gearboxreferencebody=reference_body if self.sRefBody else None,
                     gearboxratio=gearbox_ratio if self.sRefBody else None,
                     screwthreadpitch=screw_thread_pitch if self.sThreadPitch else None,
+                    visualaxis=visual_axis
                 )
                 defined = defined+1
 
