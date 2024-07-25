@@ -25,9 +25,6 @@ from ..utils.validation import validate
 
 from ..reserved_keys import JOINT_KEYS
 
-from scipy.spatial.transform import Rotation
-
-
 def getJointConstraints(joint):
     """Returns the constraints defined in the joint as tuple of two lists.
 
@@ -185,6 +182,7 @@ def setJointConstraints(
             if mathutils.Vector(tuple(ax)).length == 0.:
                 log('Axis of joint {0} is of zero length: '.format(joint.name), 'ERROR')
             ax = (np.array(ax) / np.linalg.norm(ax)).tolist()
+            joint[parameter] = mathutils.Vector(tuple(ax))
 
     # rotate joint object
     visualaxis = visualaxis if visualaxis is not None else axis
@@ -192,7 +190,6 @@ def setJointConstraints(
         bpy.ops.object.mode_set(mode='EDIT')
         editbone = joint.data.edit_bones[0]
         length = max(editbone.length, 0.1)  # make sure we do not have zero length
-        joint[parameter] = mathutils.Vector(tuple(visualaxis))
         editbone.tail = editbone.head + mathutils.Vector(tuple(visualaxis)).normalized() * length
         bpy.ops.object.mode_set(mode='POSE')
 
@@ -229,6 +226,8 @@ def setJointConstraints(
         set_universal(joint, lower, upper, lower2, upper2)
     elif jointtype == 'screw':
         set_screw(joint, lower, upper, axis, screwthreadpitch)
+    elif jointtype == 'gearbox':
+        set_gearbox(joint)
     else:
         log("Unknown joint type for joint " + joint.name + ". Behaviour like floating.", 'WARNING')
     joint['joint/type'] = jointtype
@@ -697,6 +696,14 @@ def set_universal(joint, lower, upper, lower2, upper2):
 
 
 def remove_screwdrivers(joint):
+    """
+    Delete all drivers phobos created on a given joint
+    Args:
+        joint:
+
+    Returns:
+
+    """
     bone = joint.pose.bones[0]
     if joint.animation_data is not None and joint.animation_data.drivers is not None:
         for fcurve in joint.animation_data.drivers:
@@ -726,15 +733,15 @@ def set_screw(joint, lower, upper, axis, pitch):
     bpy.ops.pose.constraint_add(type='LIMIT_LOCATION')
     cloc = getJointConstraint(joint, 'LIMIT_LOCATION')
     cloc.use_min_x = True
-    cloc.use_min_y = True
     cloc.use_min_z = True
     cloc.use_max_x = True
-    cloc.use_max_y = True
     cloc.use_max_z = True
     if lower == upper:
         cloc.use_min_y = False
         cloc.use_max_y = False
     else:
+        cloc.use_min_y = True
+        cloc.use_max_y = True
         cloc.min_y = lower
         cloc.max_y = upper
     cloc.owner_space = 'LOCAL'
@@ -777,3 +784,34 @@ def set_screw(joint, lower, upper, axis, pitch):
         target.transform_type = f'LOC_{axisName[maxIndex].upper()}'
 
         driver.expression = rotationExpression
+
+
+def set_gearbox(joint):
+    """
+
+    Args:
+      joint:
+
+    Returns:
+
+    """
+    # fix location
+    bpy.ops.pose.constraint_add(type='LIMIT_LOCATION')
+    cloc = getJointConstraint(joint, 'LIMIT_LOCATION')
+    cloc.use_min_x = True
+    cloc.use_min_y = True
+    cloc.use_min_z = True
+    cloc.use_max_x = True
+    cloc.use_max_y = True
+    cloc.use_max_z = True
+    cloc.owner_space = 'LOCAL'
+    # fix rotation x, z
+    bpy.ops.pose.constraint_add(type='LIMIT_ROTATION')
+    crot = getJointConstraint(joint, 'LIMIT_ROTATION')
+    crot.use_limit_x = True
+    crot.min_x = 0
+    crot.max_x = 0
+    crot.use_limit_z = True
+    crot.min_z = 0
+    crot.max_z = 0
+    crot.owner_space = 'LOCAL'

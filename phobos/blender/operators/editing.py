@@ -1541,6 +1541,14 @@ class DefineJointConstraintsOperator(Operator):
     )
 
     def reference_bodies(self, context):
+        """
+        Get a list of available reference bodies. Can be any joint that is not selected
+        Args:
+            context:
+
+        Returns:
+
+        """
         return [
             (link["joint/name"],)*3 for link in bpy.data.objects
             if link.phobostype == "link" and link not in context.selected_objects
@@ -1589,6 +1597,9 @@ class DefineJointConstraintsOperator(Operator):
     executeMessage = []
 
     def setOptionalParameters(self):
+        """
+        Show or hide parameters according to selected joint type
+        """
         self.sRefBody = False  # Show gearbox options: reference body drop down and gearbox ratio
         self.sAxis = False  # Show first axis
         self.sLimit = False  # Show axis limits
@@ -1624,8 +1635,8 @@ class DefineJointConstraintsOperator(Operator):
             self.sLimitEqual = True
             self.sLimitAngle = True
         if self.joint_type == "gearbox":
-            self.sAxis = "Axis for theta 1 (ref to parent)"
-            self.sAxis2 = "Axis for theta 2 (ref to child)"
+            self.sAxis = "Axis for theta 1 (reference body to parent)"
+            self.sAxis2 = "Axis for theta 2 (reference body to child)"
         if self.joint_type == "universal":
             self.sAxis2 = True
             self.sAxisFlip = True
@@ -1877,6 +1888,15 @@ class DefineJointConstraintsOperator(Operator):
             if screw_thread_pitch == 0:
                 validInput = False
                 self.executeMessage.append("Cannot create a screw joint with thread pitch 0")
+
+        if self.joint_type == "gearbox":
+            if len(self.reference_bodies(context)) == 0:
+                validInput = False
+                self.executeMessage.append("No reference bodies available")
+                self.executeMessage.append("Create another joint to select it as reference body")
+            elif self.reference_body == "":
+                validInput = False
+                self.executeMessage.append("Select a reference body")
 
         # set properties for each joint
         if validInput:
