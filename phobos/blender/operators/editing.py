@@ -3538,7 +3538,16 @@ class ParentOperator(Operator):
         children = context.selected_objects
         for child in children:
             if child != parent:
+                if sUtils.getEffectiveParent(parent) == child:
+                    root = sUtils.getEffectiveParent(child)
+                    sUtils.selectObjects([parent], active=0, clear=True)
+                    bpy.ops.object.parent_clear(type='CLEAR_KEEP_TRANSFORM')
+                    if root is not None:
+                        eUtils.parentObjectsTo(parent, root)
+
                 eUtils.parentObjectsTo(child, parent)
+
+        sUtils.selectObjects(children, active=children.index(parent) or 0, clear=True)
 
         return {'FINISHED'}
 
