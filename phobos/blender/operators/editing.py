@@ -1619,7 +1619,7 @@ class DefineJointConstraintsOperator(Operator):
             self.sRefBody = True
 
         # axis
-        if self.joint_type in ["revolute", "prismatic", "continuous", "planar", "universal"]:
+        if self.joint_type in ["revolute", "prismatic", "continuous", "planar", "universal", "screw", "ball"]:
             self.sAxis = True
         if self.joint_type in ["revolute", "prismatic", "continuous", "planar", "floating", "universal", "screw"]:
             self.sEffort = True
@@ -1642,7 +1642,6 @@ class DefineJointConstraintsOperator(Operator):
             self.sAxisFlip = True
         if self.joint_type == "screw":
             self.sLimit = True
-            self.sAxis = True
             self.sThreadPitch = True
 
         # spring, damping
@@ -1893,7 +1892,8 @@ class DefineJointConstraintsOperator(Operator):
             if len(self.reference_bodies(context)) == 0:
                 validInput = False
                 self.executeMessage.append("No reference bodies available")
-                self.executeMessage.append("Create another joint to select it as reference body")
+                self.executeMessage.append("Create another joint to select it as reference")
+                self.executeMessage.append("body")
             elif self.reference_body == "":
                 validInput = False
                 self.executeMessage.append("Select a reference body")

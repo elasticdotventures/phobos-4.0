@@ -21,6 +21,7 @@ from bpy.app.handlers import persistent
 
 from ..phoboslog import log
 from ..utils import io as ioUtils
+from ..utils import selection as sUtils
 from ..utils.validation import validate
 
 from ..reserved_keys import JOINT_KEYS
@@ -185,7 +186,7 @@ def setJointConstraints(
             joint[parameter] = mathutils.Vector(tuple(ax))
 
     # rotate joint object
-    visualaxis = visualaxis if visualaxis is not None else axis
+    visualaxis = visualaxis if visualaxis is not None else axis if axis is not None else [0, 0, 1]
     if np.linalg.norm(visualaxis) != 0:
         bpy.ops.object.mode_set(mode='EDIT')
         editbone = joint.data.edit_bones[0]
@@ -227,7 +228,7 @@ def setJointConstraints(
     elif jointtype == 'screw':
         set_screw(joint, lower, upper, axis, screwthreadpitch)
     elif jointtype == 'gearbox':
-        set_gearbox(joint)
+        set_gearbox(joint, axis, axis2, gearboxratio)
     else:
         log("Unknown joint type for joint " + joint.name + ". Behaviour like floating.", 'WARNING')
     joint['joint/type'] = jointtype
@@ -708,7 +709,7 @@ def remove_screwdrivers(joint):
     if joint.animation_data is not None and joint.animation_data.drivers is not None:
         for fcurve in joint.animation_data.drivers:
             if fcurve.data_path == f'pose.bones["{bone.name}"].rotation_euler':
-                if fcurve.driver.variables[0].name == "phobosvar":
+                if fcurve.driver.variables[0].name.startswith("phobos"):
                     joint.animation_data.drivers.remove(fcurve)
                 else:
                     # TODO This is not our driver, it could interfere with our drivers
@@ -786,7 +787,7 @@ def set_screw(joint, lower, upper, axis, pitch):
         driver.expression = rotationExpression
 
 
-def set_gearbox(joint):
+def set_gearbox(joint, axis, axis2, ratio):
     """
 
     Args:
@@ -795,6 +796,9 @@ def set_gearbox(joint):
     Returns:
 
     """
+    print("Setting joint parent")
+    print(joint)
+    print(sUtils.getEffectiveParent(joint))
     # fix location
     bpy.ops.pose.constraint_add(type='LIMIT_LOCATION')
     cloc = getJointConstraint(joint, 'LIMIT_LOCATION')
@@ -805,13 +809,65 @@ def set_gearbox(joint):
     cloc.use_max_y = True
     cloc.use_max_z = True
     cloc.owner_space = 'LOCAL'
-    # fix rotation x, z
+    # free rotation
     bpy.ops.pose.constraint_add(type='LIMIT_ROTATION')
     crot = getJointConstraint(joint, 'LIMIT_ROTATION')
-    crot.use_limit_x = True
-    crot.min_x = 0
-    crot.max_x = 0
-    crot.use_limit_z = True
-    crot.min_z = 0
-    crot.max_z = 0
     crot.owner_space = 'LOCAL'
+
+    bone = joint.pose.bones[0]
+    bone.rotation_mode = 'XYZ'
+
+    if axis is not None:
+        # add driver
+
+        x, y, z = axis  # parent
+        vx, vy, vz = "phobosX", "phobosY", "phobosZ"
+        xreq, yreq, zreq = x != 0, y != 0, z != 0  # value required?
+        xexp, yexp, zexp = f"{x}*{vx}", f"{y}*{vy}", f"{z}*{vz}"  # value expression
+
+        exps = []  # added expressions
+        if xreq:
+            exps.append(xexp)
+        if yreq:
+            exps.append(yexp)
+        if zreq:
+            exps.append(zexp)
+        exp = "+".join(exps)
+
+        input = f"{ratio} * ({exp})"
+        parent = sUtils.getEffectiveParent(joint)
+
+        for index, value in enumerate(axis2):
+            if value != 0:
+                fcurve = bone.driver_add("rotation_euler", index)
+                driver = fcurve.driver
+
+                if xreq:
+                    variable = driver.variables.new()
+                    variable.name = "phobosX"
+                    variable.type = "TRANSFORMS"
+                    target = variable.targets[0]
+                    target.id = parent
+                    target.bone_target = "Bone"
+                    target.transform_type = 'ROT_X'
+
+                if yreq:
+                    variable = driver.variables.new()
+                    variable.name = "phobosY"
+                    variable.type = "TRANSFORMS"
+                    target = variable.targets[0]
+                    target.id = parent
+                    target.bone_target = "Bone"
+                    target.transform_type = 'ROT_Y'
+
+                if zreq:
+                    variable = driver.variables.new()
+                    variable.name = "phobosZ"
+                    variable.type = "TRANSFORMS"
+                    target = variable.targets[0]
+                    target.id = parent
+                    target.bone_target = "Bone"
+                    target.transform_type = 'ROT_Z'
+
+                driver.expression = f"{value} * {input}"
+                print(driver.expression)
