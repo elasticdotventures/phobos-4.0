@@ -1679,10 +1679,8 @@ class JointMimic(Representation, SmurfBase):
         super().__init__()
         self.joint = _singular(joint)
         assert self.joint is not None
-        self.multiplier = multiplier
-        assert self.multiplier is not None
-        self.offset = offset
-        assert self.offset is not None
+        self.multiplier = multiplier or 1
+        self.offset = offset or 0
         self.returns += ["joint", "multiplier", "offset"]
 
     def equivalent(self, other):
