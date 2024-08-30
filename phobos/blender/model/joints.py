@@ -796,9 +796,6 @@ def set_gearbox(joint, axis, axis2, ratio):
     Returns:
 
     """
-    print("Setting joint parent")
-    print(joint)
-    print(sUtils.getEffectiveParent(joint))
     # fix location
     bpy.ops.pose.constraint_add(type='LIMIT_LOCATION')
     cloc = getJointConstraint(joint, 'LIMIT_LOCATION')
@@ -817,6 +814,10 @@ def set_gearbox(joint, axis, axis2, ratio):
     bone = joint.pose.bones[0]
     bone.rotation_mode = 'XYZ'
 
+    # TODO create gearbox drivers, the code below might help
+
+    """
+    
     if axis is not None:
         # add driver
 
@@ -870,4 +871,4 @@ def set_gearbox(joint, axis, axis2, ratio):
                     target.transform_type = 'ROT_Z'
 
                 driver.expression = f"{value} * {input}"
-                print(driver.expression)
+    """
