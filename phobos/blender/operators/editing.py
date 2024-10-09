@@ -1758,16 +1758,21 @@ class DissolveLink(Operator):
 
 class AddMotorOperator(Operator):
     """Add a motor to the selected joint.
-It is possible to add motors to multiple joints at the same time"""
+    It is possible to add motors to multiple joints at the same time"""
 
     bl_idname = "phobos.add_motor"
     bl_label = "Add Motor"
     bl_options = {'UNDO'}
+    bl_description = "Add a motor to the selected joint.\n" \
+                     "It is possible to add motors to multiple joints at the same time"
     lastMotorDefault = None
 
-    template : EnumProperty(items=[(n,n,n) for n in resources.get_motor_defaults()], name='Template', description="The template to use for this motor")
-    motorType : EnumProperty(items=[(n,n,n) for n in representation.Motor.BUILD_TYPES], name="Motor type", description='The motor type')
-    controllerType: EnumProperty(items=[(n,n,n) for n in representation.Motor.TYPES], name="Controller type", description='The controller type')
+    template : EnumProperty(items=[(n,n,n) for n in resources.get_motor_defaults()], name='Template',
+                            description="The template to use for this motor")
+    motorType : EnumProperty(items=[(n,n,n) for n in representation.Motor.BUILD_TYPES], name="Motor type",
+                             description='The motor type')
+    controllerType: EnumProperty(items=[(n,n,n) for n in representation.Motor.TYPES], name="Controller type",
+                                 description='The controller type')
     maxeffort : FloatProperty(
         name="Max Effort (N or Nm)", default=0.0, description="Maximum effort of the joint"
     )
