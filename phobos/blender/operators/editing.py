@@ -1983,10 +1983,10 @@ class RemoveMotorOperator(Operator):
                         del obj[mProp]
                         if not motorRemoved:
                             motorRemoved = True
-                            removedMotors+=1
+                            removedMotors += 1
         if len(context.selected_objects) > 1 and removedMotors > 0:
             pluralS = "s" if removedMotors > 1 else ""
-        InfoMessageWithBox(message=f"{removedMotors} motor{pluralS} removed from selected objects")
+            InfoMessageWithBox(message=f"{removedMotors} motor{pluralS} removed from selected objects", silentFor=0)
         return {'FINISHED'}
 
     @classmethod
