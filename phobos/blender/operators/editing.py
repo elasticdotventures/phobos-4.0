@@ -2090,6 +2090,9 @@ class AddSensorOperator(Operator):
     bl_idname = "phobos.add_sensor"
     bl_label = "Add Sensor"
     bl_options = {'REGISTER', 'UNDO'}
+    bl_description = "Add a sensor at the position of the selected object. \n" \
+    "It is possible to create a new link for the sensor on the fly. Otherwise, \n" \
+    "the next link in the hierarchy will be used to parent the sensor to"
 
 
     def sensorlist(self, context):
