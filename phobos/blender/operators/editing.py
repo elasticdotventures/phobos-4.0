@@ -811,6 +811,7 @@ class SetGeometryType(Operator):
             'INFO',
         )
         log("    Objects: " + str([obj.name for obj in objs]), 'DEBUG')
+        phobosgui.updateSidebar()
         return {'FINISHED'}
 
     @classmethod
