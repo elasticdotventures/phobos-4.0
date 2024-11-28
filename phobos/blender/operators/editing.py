@@ -1485,8 +1485,28 @@ class DefineJointConstraintsOperator(Operator):
         name='Active', default=False, description='Add a motor to the joint'
     )
 
+    def toggleRadian(self, context):
+        """
+        Convert limits and max velocity to radians or degrees when toggling the checkbox
+        Args:
+            context:
+
+        Returns:
+
+        """
+        if self.useRadian:
+            method = math.radians
+        else:
+            method = math.degrees
+        self.upper = method(self.upper)
+        self.lower = method(self.lower)
+        self.maxvelocity = method(self.maxvelocity)
+        self.upper2 = method(self.upper2)
+        self.lower2 = method(self.lower2)
+        self.maxvelocity2 = method(self.maxvelocity2)
+
     useRadian: BoolProperty(
-        name='Use Radian', default=True, description='Use degrees or rad for joints'
+        name='Use Radian', default=True, description='Use degrees or rad for joints', update=toggleRadian
     )
 
     joint_type : EnumProperty(
