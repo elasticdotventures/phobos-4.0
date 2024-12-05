@@ -2039,9 +2039,9 @@ class Motor(Representation, SmurfBase):
     TYPES = ["position", "velocity", "force"]
     _class_variables = ["name", "joint"]
 
-    def __init__(self, name=None, joint=None, type="position", **kwargs):
+    def __init__(self, name=None, joint=None, joint_name=None, type="position", **kwargs):
         self.name = name
-        self.joint = joint
+        self.joint = joint or joint_name
         SmurfBase.__init__(self, returns=["name", "joint"], **kwargs)
         # This is hardcoded information
         assert self.joint is not None
@@ -2204,17 +2204,17 @@ class PluginFactory(Representation):
             assert "joint_name" in kwargs
             if "JointPositionController" in plugin_name:
                 type = "position"
-            elif not kwargs.get("use_force_command", False):
+            elif not kwargs.get("use_force_commands", False):
                 type = "velocity"
             else:
                 type = "force"
-            kwargs.pop("use_force_command")
+            kwargs.pop("use_force_commands", None)
             return Motor(
                 name=kwargs["joint_name"]+"_motor",
                 type=(
                     "position" if "JointPositionController" in plugin_name
                     else (
-                        "velocity" if not kwargs.get("use_force_command", False)
+                        "velocity" if not kwargs.get("use_force_commands", False)
                         else "force"
                     )
                 ),
