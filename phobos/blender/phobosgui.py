@@ -1888,12 +1888,14 @@ def register():
 
     # add i/o settings to scene to preserve settings for every model
     for meshtype in phobos_defs.MESH_TYPES:
+        print("Adding setting", meshtype)
         typename = "export_mesh_" + meshtype
-        setattr(bpy.types.Scene, typename, BoolProperty(name=meshtype, default=False))
+        setattr(bpy.types.Scene, typename, BoolProperty(name=meshtype, default=meshtype == "stl"))
 
     for entitytype in phobos_defs.EXPORT_TYPES:
         typename = "export_entity_" + entitytype
-        setattr(bpy.types.Scene, typename, BoolProperty(name=entitytype, default=entitytype == "smurf"))
+        setattr(bpy.types.Scene, typename, BoolProperty(name=entitytype,
+                                                        default=entitytype == "smurf" or entitytype == "urdf"))
 
     # [TODO v2.1.0] Re-add scene export
     # for scenetype in scenes.scene_types:
