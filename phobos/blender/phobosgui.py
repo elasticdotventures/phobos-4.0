@@ -1888,7 +1888,6 @@ def register():
 
     # add i/o settings to scene to preserve settings for every model
     for meshtype in phobos_defs.MESH_TYPES:
-        print("Adding setting", meshtype)
         typename = "export_mesh_" + meshtype
         setattr(bpy.types.Scene, typename, BoolProperty(name=meshtype, default=meshtype == "stl"))
 
