@@ -28,17 +28,24 @@ except ImportError:
 BPY_AVAILABLE = False
 try:
     import bpy
-    BPY_AVAILABLE = True
-    log.info("Blender-Python (bpy) available.")
+    import sys
+    if "blender" in sys.executable.lower():
+        BPY_AVAILABLE = True
+        log.info("Blender-Python (bpy) available.")
+    else:
+        BPY_AVAILABLE = False
+        log.info("Blender-Python (bpy) available, but not executing from within blender.")
+    del sys
 except ImportError:
     log.info("Blender-Python (bpy) not available.")
 
 
-PYBULLET_AVAILBABLE = False
+PYBULLET_AVAILABLE = False
 
 
 def check_pybullet_available():
-    if not PYBULLET_AVAILBABLE:
+    global PYBULLET_AVAILABLE
+    if not PYBULLET_AVAILABLE:
         from .commandline_logging import get_logger
         log = get_logger(__name__)
         try:

@@ -1674,6 +1674,8 @@ class DefineJointConstraintsOperator(Operator):
 
         """
         layout = self.layout
+        for msg in self.executeMessage:
+            layout.label(text=msg)
         if self.name.replace(" ", "_") != self.name:
             layout.label(text="Created as "+self.name.replace(" ", "_"))
         if len(context.selected_objects) == 1:
@@ -1796,6 +1798,7 @@ class DefineJointConstraintsOperator(Operator):
 
         """
         obj = context.active_object
+        self.name = ""
         if any([k.startswith("joint") for k in obj.keys()]):
             if "joint/limits/lower" in obj:
                 self.lower = obj["joint/limits/lower"]
@@ -2633,7 +2636,7 @@ class AddSensorOperator(Operator):
         return {'FINISHED'}
 
 #
-# # [TODO v2.0.0] REVIEW this
+# # [TODO v2.2.0] REVIEW this
 # def addControllerFromYaml(controller_dict, annotations, selected_objs, active_obj, *args):
 #     """Execution function for the temporary operator to add controllers from yaml files.
 #
@@ -2678,7 +2681,7 @@ class AddSensorOperator(Operator):
 #     return controller_objs, annotation_objs, []
 #
 #
-# # [TODO v2.0.0] REVIEW this
+# # [TODO v2.2.0] REVIEW this
 # class AddControllerOperator(Operator):
 #     """Add a controller at the position of the selected object."""
 #
@@ -2831,7 +2834,7 @@ class AddSensorOperator(Operator):
 #         return {'FINISHED'}
 #
 #
-# # [TODO v2.0.0] REVIEW this
+# # [TODO v2.2.0] REVIEW this
 # def getControllerParameters(name):
 #     """Returns the controller parameters for the controller type with the provided
 #     name.
@@ -2848,7 +2851,7 @@ class AddSensorOperator(Operator):
 #         return []
 #
 #
-# # [TODO v2.0.0] REVIEW this
+# # [TODO v2.2.0] REVIEW this
 # def getDefaultControllerParameters(scene, context):
 #     """Returns the default controller parameters for the controller of the active
 #     object.
@@ -2867,7 +2870,7 @@ class AddSensorOperator(Operator):
 #         return None
 #
 
-# [TODO v2.0.0] REVIEW this
+# [TODO v2.2.0] REVIEW this
 class CreateMimicJointOperator(Operator):
     """Make a number of joints follow a specified joint"""
 
@@ -3064,7 +3067,7 @@ class AddHeightmapOperator(Operator):
         return {'RUNNING_MODAL'}
 
 
-# [TODO v2.0.0] REVIEW this
+# [TODO v2.2.0] REVIEW this
 class AddSubmodel(Operator):
     """Add a submodel instance to the scene"""
 
@@ -3193,7 +3196,7 @@ class AddSubmodel(Operator):
         return {'FINISHED'}
 
 
-# [TODO v2.0.0] REVIEW this
+# [TODO v2.2.0] REVIEW this
 class DefineSubmodel(Operator):
     """Define a new submodel from objects"""
 
@@ -3376,7 +3379,6 @@ class AssignSubmechanism(Operator):
         if len(self.executeMessage) > 0:
             for t in self.executeMessage:
                 layout.label(text=t)
-
 
     def execute(self, context):
         """
@@ -3570,7 +3572,7 @@ class SelectSubmechanism(Operator):
 
 
 
-# [TODO v2.0.0] REVIEW this
+# [TODO v2.2.0] REVIEW this
 class MergeLinks(Operator):
     """Merge links"""
 
