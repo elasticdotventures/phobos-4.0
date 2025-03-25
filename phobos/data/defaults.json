@@ -406,13 +406,14 @@
       }
     ]
   },
-  "rel_mesh_pathes": {
+  "rel_mesh_paths": {
     "iv": "meshes/iv",
     "stl": "meshes/stl",
     "obj": "meshes/obj",
     "dae": "meshes/dae",
     "bobj": "meshes/bobj",
     "mars_obj": "meshes/mars_obj",
-    "input_type": "meshes"
+    "input_type": "meshes",
+    "glb": "meshes/glb"
   }
 }

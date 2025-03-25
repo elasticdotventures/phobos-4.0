@@ -25,7 +25,7 @@ def main(args):
     parser.add_argument('output', type=str, help='Output specification: A path to a file (with extension [smurfa, smurfs, smurf, urdf, sdf]) or directory',
                         action="store", default=None)
     parser.add_argument('-c', '--copy-meshes', help='Copies the meshes', action='store_true', default=False)
-    parser.add_argument('-m', '--mesh-type', choices=["stl", "obj", "mars_obj", "dae", "input_type"], help='If -c set the mesh type', default="input_type")
+    parser.add_argument('-m', '--mesh-type', choices=["stl", "obj", "mars_obj", "dae", "input_type", "glb"], help='If -c set the mesh type', default="input_type")
     parser.add_argument('-a', '--sdf-assemble', help='When converting a scene to sdf set this flag to get one assembled model', action='store_true', default=False)
     parser.add_argument('-e', '--export_config', type=str, help='Path to the a json/yaml file that stores the export config', default=None)
     parser.add_argument("--loglevel", help="The log level", choices=["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"],

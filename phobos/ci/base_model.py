@@ -833,7 +833,7 @@ class BaseModel(yaml.YAMLObject):
         self.robot.link_entities()
         self.robot.submodel_defs = {} # we define these here per model
         ros_pkg_name = self.robot.export(outputdir=self.exportdir, export_config=self.export_config,
-                                         rel_mesh_pathes=self.pipeline.meshes, ros_pkg_later=True,
+                                         rel_mesh_paths=self.pipeline.meshes, ros_pkg_later=True,
                                          reduce_meshes=getattr(self, "reduce_meshes", None),
                                          apply_scale=getattr(self, "apply_scale", None),
                                          ros_pkg_name=getattr(self, "ros_pkg_name", None),

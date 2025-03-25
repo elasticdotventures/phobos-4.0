@@ -20,6 +20,7 @@ from ..geometry.geometry import identical, reduce_mesh, get_reflection_matrix, i
 from ..utils import misc, git, transform
 from ..utils.transform import inv
 from ..utils.xml import read_relative_filename
+from .. import defs as phobos_defs
 
 MESH_INFO_KEYS = ["vertex_normals", "texture_coords", "vertices", "faces"]
 MESH_DATA_TYPES = ["trimesh.base.Trimesh", "trimesh.scene.scene.Scene", "file_obj", "file_stl", "file_dae", "file_iv"]
@@ -896,6 +897,12 @@ class Mesh(Representation, SmurfBase):
                     mesh.from_pydata(self.mesh_information["vertices"], [], [f[0] for f in self.mesh_information["faces"]])
                 except:
                     raise ImportError("BOBJ loading is an experimental feature. If you have another mesh source try that.")
+            elif self.input_type == "file_glb":
+                bpy.ops.import_scene.gltf(filepath=self.input_file)
+                self._mesh_object = bpy.data.meshes[bpy.context.object.data.name]
+                bpy.ops.object.delete()
+            else:
+                log.error(f"Mesh input file type {self.input_type} is not implemented")
             self._operations.append("_loaded_in_blender")
             self._mesh_object["input_file"] = self.input_file
             self.changed = True  # as we there might be unnoticed changes by blender
@@ -1058,6 +1065,10 @@ class Mesh(Representation, SmurfBase):
             elif format.lower() == "bobj":
                 log.debug(f"Exporting {targetpath} with {len(self.mesh_object.vertices)} vertices...")
                 mesh_io.write_bobj(targetpath, **mesh_io.blender_2_mesh_info_dict(self.mesh_object))
+            elif format.lower() == "glb":
+                bpy.ops.export_scene.gltf(filepath=targetpath, use_selection=True)
+            else:
+                log.error(f"Mesh export format {format} is not implemented")
             bpy.ops.object.select_all(action='DESELECT')
             tmpobject.select_set(True)
             bpy.ops.object.delete()
@@ -1340,7 +1351,7 @@ class GeometryFactory(Representation):
             if "exported" in kwargs:
                 filetype = kwargs.get("mesh_format", None)
                 if filetype is None:
-                    for filetype in ["obj", "stl", "dae", "bobj"]:
+                    for filetype in phobos_defs.MESH_TYPES:
                         if filetype in kwargs["exported"]:
                             break
                 info = kwargs["exported"][filetype]
