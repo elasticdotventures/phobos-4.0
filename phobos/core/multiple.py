@@ -22,7 +22,8 @@ class Entity(Representation, SmurfBase):
         assert world is not None
         self.model = _singular(model)
         self.origin = _singular(origin) if origin is not None else representation.Pose()
-        self._file = os.path.normpath(os.path.join(os.path.dirname(world.inputfile), file)) if file and not os.path.isabs(file) else file
+        self._file = os.path.normpath(os.path.join(os.path.dirname(world.inputfile), file)) \
+            if file is not None and not os.path.isabs(file) else file
         if model is None and file is not None:
             if self._file.lower().rsplit(".", 1)[-1] in ["smurfs", "smurfa"]:
                 try:

@@ -1908,10 +1908,8 @@ class JointMimic(Representation, SmurfBase):
         super().__init__()
         self.joint = _singular(joint)
         assert self.joint is not None
-        self.multiplier = multiplier
-        assert self.multiplier is not None
-        self.offset = offset
-        assert self.offset is not None
+        self.multiplier = multiplier or 1
+        self.offset = offset or 0
         self.returns += ["joint", "multiplier", "offset"]
 
     def equivalent(self, other):
@@ -2316,9 +2314,9 @@ class Motor(Representation, SmurfBase):
     TYPES = ["position", "velocity", "force"]
     _class_variables = ["name", "joint"]
 
-    def __init__(self, name=None, joint=None, type="position", soft_limits={}, pid_config={}, **kwargs):
+    def __init__(self, name=None, joint=None, joint_name=None, type="position", soft_limits={}, pid_config={}, **kwargs):
         self.name = name
-        self.joint = joint
+        self.joint = joint or joint_name
         SmurfBase.__init__(self, returns=["name", "joint"], **kwargs)
         # This is hardcoded information
         assert self.joint is not None
@@ -2524,7 +2522,7 @@ class PluginFactory(Representation):
                 type = "velocity"
             else:
                 type = "force"
-            kwargs.pop("use_force_commands")
+            kwargs.pop("use_force_commands", None)
             return Motor(
                 name=kwargs["joint_name"]+"_motor",
                 type=(
