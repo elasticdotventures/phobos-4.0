@@ -23,7 +23,7 @@ except ImportError:
     pass
 
 # Phobos information
-version = '2.0.0 "Perilled Pangolin"'
+version = '2.1.0 "Perilled Pangolin"'
 repository = 'https://github.com/dfki-ric/phobos'
 
 bl_info = {
@@ -44,6 +44,7 @@ requirements = {
     "yaml": "pyyaml",
     "numpy": "numpy",
     "scipy": "scipy",
+    "pkg_resources": "setuptools",
     "collada": "pycollada",
     "pydot": "pydot"
 }
