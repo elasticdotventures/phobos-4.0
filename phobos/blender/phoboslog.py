@@ -175,7 +175,7 @@ def find_calling_operator(frame):
 
 
 recentMessageBoxes = {}
-def _MessageWithBox(message, title, icon, reporter, silentFor=15):
+def _MessageWithBox(message, title, icon, reporter, silent_for=15):
     """Display a message box
 
     Args:
@@ -183,14 +183,14 @@ def _MessageWithBox(message, title, icon, reporter, silentFor=15):
       title (str, optional)
       icon (str, optional): Name of blender icon
       reporter (optional)
-      silentFor (float, optional): Ignores calls with the same message for x seconds
+      silent_for (float, optional): Ignores calls with the same message for x seconds
       to prevent spamming the user with error boxes, default 15
 
     """
-    if silentFor > 0:
+    if silent_for > 0:
         if message in recentMessageBoxes:
             timePassed = time.time()-recentMessageBoxes[message]
-            if timePassed < silentFor:
+            if timePassed < silent_for:
                 return
         recentMessageBoxes[message] = time.time()
 
@@ -200,14 +200,14 @@ def _MessageWithBox(message, title, icon, reporter, silentFor=15):
     if reporter:
         reporter.report({"ERROR"}, "Phobos: "+message)
 
-def ErrorMessageWithBox(message="", title="Phobos Error", icon='ERROR', reporter=None, silentFor=15):
+def ErrorMessageWithBox(message="", title="Phobos Error", icon='ERROR', reporter=None, silent_for=15):
     log(message, "ERROR")
-    return _MessageWithBox(message=message, title=title, icon=icon, reporter=reporter, silentFor=silentFor)
+    return _MessageWithBox(message=message, title=title, icon=icon, reporter=reporter, silent_for=silent_for)
 
-def WarnMessageWithBox(message="", title="Phobos Warning", icon='ERROR', reporter=None, silentFor=15):
+def WarnMessageWithBox(message="", title="Phobos Warning", icon='ERROR', reporter=None, silent_for=15):
     log(message, "WARNING")
-    return _MessageWithBox(message=message, title=title, icon=icon, reporter=reporter, silentFor=silentFor)
+    return _MessageWithBox(message=message, title=title, icon=icon, reporter=reporter, silent_for=silent_for)
 
-def InfoMessageWithBox(message="", title="Phobos Info", icon='INFO', reporter=None, silentFor=15):
+def InfoMessageWithBox(message="", title="Phobos Info", icon='INFO', reporter=None, silent_for=15):
     log(message, "INFO")
-    return _MessageWithBox(message=message, title=title, icon=icon, reporter=reporter, silentFor=silentFor)
+    return _MessageWithBox(message=message, title=title, icon=icon, reporter=reporter, silent_for=silent_for)

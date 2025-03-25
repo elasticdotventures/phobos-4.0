@@ -1998,7 +1998,7 @@ class RemoveMotorOperator(Operator):
                             removedMotors += 1
         if len(context.selected_objects) > 1 and removedMotors > 0:
             pluralS = "s" if removedMotors > 1 else ""
-            InfoMessageWithBox(message=f"{removedMotors} motor{pluralS} removed from selected objects", silentFor=0)
+            InfoMessageWithBox(message=f"{removedMotors} motor{pluralS} removed from selected objects", silent_for=0)
         return {'FINISHED'}
 
     @classmethod
