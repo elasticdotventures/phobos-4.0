@@ -442,7 +442,7 @@ def deriveLink(obj, objectlist=None, logging=True, errors=None):
         visuals=visuals,
         collisions=collisions,
         inertial=inertial,
-        originRoot=deriveObjectPose(obj, effectiveparent=root),
+        origin_root=deriveObjectPose(obj, effectiveparent=root),
         # [TODO v2.1.0] Add KCCD support
         kccd_hull=None,
         **annotations
