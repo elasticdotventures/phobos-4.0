@@ -34,7 +34,7 @@ from bpy.types import Operator
 from idprop.types import IDPropertyGroup
 from phobos.io import hyrodyn
 
-from .. import defs as defs
+from .. import defs as defs, phobosgui
 from .. import display as display
 from ..io import phobos2blender, blender2phobos
 from ..model import controllers as controllermodel
@@ -42,7 +42,7 @@ from ..model import inertia as inertialib
 from ..model import joints as jUtils
 from ..model import links as modellinks
 from ..phobosgui import prev_collections
-from ..phoboslog import log, ErrorMessageWithBox, WarnMessageWithBox
+from ..phoboslog import log, ErrorMessageWithBox, WarnMessageWithBox, InfoMessageWithBox
 from ..operators.generic import addObjectFromYaml, DynamicProperty, AddAnnotationsOperator, \
     EditAnnotationsOperator, AnnotationsOperator
 from ..utils import blender as bUtils
@@ -514,6 +514,7 @@ class SetPhobosType(Operator):
 
         for obj in context.selected_objects:
             obj.phobostype = self.phobostype
+        phobosgui.updateSidebar()
         return {'FINISHED'}
 
     @classmethod
@@ -810,6 +811,7 @@ class SetGeometryType(Operator):
             'INFO',
         )
         log("    Objects: " + str([obj.name for obj in objs]), 'DEBUG')
+        phobosgui.updateSidebar()
         return {'FINISHED'}
 
     @classmethod
@@ -2073,11 +2075,16 @@ class AddMotorOperator(Operator):
     bl_idname = "phobos.add_motor"
     bl_label = "Add Motor"
     bl_options = {'UNDO'}
+    bl_description = "Add a motor to the selected joint.\n" \
+                     "It is possible to add motors to multiple joints at the same time"
     lastMotorDefault = None
 
-    template : EnumProperty(items=[(n,n,n) for n in resources.get_motor_defaults()], name='Template', description="The template to use for this motor")
-    motorType : EnumProperty(items=[(n,n,n) for n in representation.Motor.BUILD_TYPES], name="Motor type", description='The motor type')
-    controllerType: EnumProperty(items=[(n,n,n) for n in representation.Motor.TYPES], name="Controller type", description='The controller type')
+    template : EnumProperty(items=[(n,n,n) for n in resources.get_motor_defaults()], name='Template',
+                            description="The template to use for this motor")
+    motorType : EnumProperty(items=[(n,n,n) for n in representation.Motor.BUILD_TYPES], name="Motor type",
+                             description='The motor type')
+    controllerType: EnumProperty(items=[(n,n,n) for n in representation.Motor.TYPES], name="Controller type",
+                                 description='The controller type')
     maxeffort : FloatProperty(
         name="Max Effort (N or Nm)", default=0.0, description="Maximum effort of the joint"
     )
@@ -2169,26 +2176,9 @@ class AddMotorOperator(Operator):
         Returns:
 
         """
-        active_obj = (
-            context.active_object
-            and context.active_object.phobostype == 'link'
-            and context.active_object.mode == 'OBJECT'
-        )
-
-        if not active_obj:
-            return False
-            # for obj in context.selected_objects:
-            #     if obj.mode == 'OBJECT' and obj.phobostype == 'link':
-            #         active_obj = obj
-            #         context.view_layer.objects.active = obj
-            #         break
-            # if not active_obj:
-        else:
-            active_obj = context.active_object
-
-        joint_obj = 'joint/type' in active_obj and active_obj['joint/type'] != 'fixed'
-
-        return joint_obj
+        objects = [o for o in context.selected_objects if o.phobostype == "link"
+                   and "joint/type" in o and o["joint/type"] != "fixed"]
+        return len(objects) > 0
 
     def execute(self, context):
         """
@@ -2199,7 +2189,8 @@ class AddMotorOperator(Operator):
         Returns:
 
         """
-        objects = [o for o in context.selected_objects if o.phobostype == "link"]
+        objects = [o for o in context.selected_objects if o.phobostype == "link"
+                   and "joint/type" in o and o["joint/type"] != "fixed"]
         for obj in objects:
             phobos2blender.createMotor(representation.Motor(
                 name=obj.name+"_motor",
@@ -2210,6 +2201,9 @@ class AddMotorOperator(Operator):
                 i=self.controli,
                 d=self.controld
             ), linkobj=obj)
+        n = len(objects)
+        s = "" if n == 1 else "s"
+        log(message=f"Added a motor to {n} joint{s}", level="INFO")
         return {'FINISHED'}
 
 
@@ -2292,12 +2286,10 @@ class RemoveMotorOperator(Operator):
                         del obj[mProp]
                         if not motorRemoved:
                             motorRemoved = True
-                            removedMotors+=1
+                            removedMotors += 1
         if len(context.selected_objects) > 1 and removedMotors > 0:
             pluralS = "s" if removedMotors > 1 else ""
-            WarnMessageWithBox(message=f"{removedMotors} motor{pluralS} removed from selected objects",
-                               title="Phobos Message", icon="INFO")
-        print("Motor removed")
+            InfoMessageWithBox(message=f"{removedMotors} motor{pluralS} removed from selected objects", silent_for=0)
         return {'FINISHED'}
 
     @classmethod
@@ -2408,6 +2400,9 @@ class AddSensorOperator(Operator):
     bl_idname = "phobos.add_sensor"
     bl_label = "Add Sensor"
     bl_options = {'REGISTER', 'UNDO'}
+    bl_description = "Add a sensor at the position of the selected object. \n" \
+    "It is possible to create a new link for the sensor on the fly. Otherwise, \n" \
+    "the next link in the hierarchy will be used to parent the sensor to"
 
 
     def sensorlist(self, context):
@@ -3410,9 +3405,9 @@ class AssignSubmechanism(Operator):
                 parameters = {
                     'type': '{0}R'.format(len(self.joints)),
                     #'jointnames': [j["joint/name"] for j in self.joints], #Is autogenerated
-                    'jointnames_spanningtree': [j.get("joint/name",j.name) for j in self.joints],
-                    'jointnames_active': [j.get("joint/name",j.name) for j in self.joints],
-                    'jointnames_independent': [j.get("joint/name",j.name) for j in self.joints],
+                    'jointnames_spanningtree': [j.get("joint/name", j.name) for j in self.joints],
+                    'jointnames_active': [j.get("joint/name", j.name) for j in self.joints],
+                    'jointnames_independent': [j.get("joint/name", j.name) for j in self.joints],
                     'name': self.mechanism_name,
                     'contextual_name': self.contextual_name
                 }
@@ -3430,7 +3425,7 @@ class AssignSubmechanism(Operator):
                 size = len(mechanismdata['joints']['spanningtree'])
                 if len(self.joints) == size:
                     jointmap = {
-                        getattr(self, 'jointtype' + str(i)): self.joints[i].get("joint/name",self.joints[i].name)
+                        getattr(self, 'jointtype' + str(i)): self.joints[i].get("joint/name", self.joints[i].name)
                         for i in range(len(self.joints))
                     }
                     for j in mechanismdata['joints']['spanningtree']:
@@ -3491,9 +3486,12 @@ class SelectSubmechanism(Operator):
         Returns:
 
         """
-        return bUtils.compileEnumPropertyList(
-            [r['name'] for r in context.scene.objects if r.phobostype == "submechanism"]
-        )
+        list = []
+        for r in context.scene.objects:
+            if r.phobostype == "submechanism":
+                el = (r['contextual_name'], r['contextual_name']+" - "+r['name'], "Type " + r['type'])
+                list.append(el)
+        return list
 
     def get_submechanism_roots(self, context):
         """
@@ -3506,7 +3504,7 @@ class SelectSubmechanism(Operator):
         """
         return SelectSubmechanism.get_submechanism_roots_static(context)
 
-    submechanism : EnumProperty(
+    submechanism: EnumProperty(
         name="Submechanism",
         description="submechanism which to select",
         items=get_submechanism_roots,
@@ -3562,11 +3560,8 @@ class SelectSubmechanism(Operator):
 
         """
         root = sUtils.getObjectByProperty('contextual_name', self.submechanism)
-        jointIDs = root['jointnames_spanningtree']
-        jointlist = [
-            sUtils.getObjectByProperty('joint/name', id) for id in jointIDs
-        ]
-        sUtils.selectObjects([root] + jointlist, clear=True, active=0)
+        joints = root['jointnames_spanningtree']
+        sUtils.selectObjects([root] + joints, clear=True, active=0)
         return {'FINISHED'}
 
 
@@ -3848,7 +3843,16 @@ class ParentOperator(Operator):
         children = context.selected_objects
         for child in children:
             if child != parent:
+                if sUtils.getEffectiveParent(parent) == child:
+                    root = sUtils.getEffectiveParent(child)
+                    sUtils.selectObjects([parent], active=0, clear=True)
+                    bpy.ops.object.parent_clear(type='CLEAR_KEEP_TRANSFORM')
+                    if root is not None:
+                        eUtils.parentObjectsTo(parent, root)
+
                 eUtils.parentObjectsTo(child, parent)
+
+        sUtils.selectObjects(children, active=children.index(parent) or 0, clear=True)
 
         return {'FINISHED'}
 

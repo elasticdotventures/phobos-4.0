@@ -1143,14 +1143,16 @@ class Mesh(Representation, SmurfBase):
         elif BPY_AVAILABLE and isinstance(self.mesh_object, bpy.types.Mesh):
             from ..blender.utils import blender as bUtils
             objname = "tmp_export_" + self.unique_name
-            tmpobject = bUtils.createPrimitive(objname, 'box', self.scale)
+            tmpobject = bUtils.createPrimitive(objname, 'box', (1,1,1))
+            tmpobject.scale = self.scale
             # copy the mesh here
-            tmpobject.data = self.mesh_object
+            tmpobject.data = self.mesh_object.copy()
             bpy.ops.object.select_all(action='DESELECT')
             tmpobject.select_set(True)
             bpy.ops.object.transform_apply(scale=True)
             bpy.ops.object.select_all(action='DESELECT')
             tmpobject.select_set(True)
+            self.mesh_object = tmpobject.data
             bpy.ops.object.delete()
         else:
             raise NotImplementedError()
@@ -1700,11 +1702,12 @@ class KCCDHull(Representation, SmurfBase):
 class Link(Representation, SmurfBase):
     _class_variables = ["name", "visuals", "collisions", "inertial", "kccd_hull", "origin"]
 
-    def __init__(self, name=None, visuals=None, inertial=None, collisions=None, export_collisions=None, origin=None,
+    def __init__(self, name=None, visuals=None, inertial=None, collisions=None, export_collisions=None, origin=None, origin_root=None,
                  noDataPackage=None, reducedDataPackage=None, is_human=None, kccd_hull=None, **kwargs):
         SmurfBase.__init__(self, **kwargs)
         self.name = name
         self.origin = _singular(origin)
+        self.originRoot = _singular(origin_root)
         self.is_human = is_human
         self.returns += ['name', "is_human"]
         self.visuals = _plural(visuals)
@@ -1906,10 +1909,8 @@ class JointMimic(Representation, SmurfBase):
         super().__init__()
         self.joint = _singular(joint)
         assert self.joint is not None
-        self.multiplier = multiplier
-        assert self.multiplier is not None
-        self.offset = offset
-        assert self.offset is not None
+        self.multiplier = multiplier or 1
+        self.offset = offset or 0
         self.returns += ["joint", "multiplier", "offset"]
 
     def equivalent(self, other):
@@ -2338,9 +2339,9 @@ class Motor(Representation, SmurfBase):
     TYPES = ["position", "velocity", "force"]
     _class_variables = ["name", "joint"]
 
-    def __init__(self, name=None, joint=None, type="position", soft_limits={}, pid_config={}, **kwargs):
+    def __init__(self, name=None, joint=None, joint_name=None, type="position", soft_limits={}, pid_config={}, **kwargs):
         self.name = name
-        self.joint = joint
+        self.joint = joint or joint_name
         SmurfBase.__init__(self, returns=["name", "joint"], **kwargs)
         # This is hardcoded information
         assert self.joint is not None
@@ -2546,7 +2547,7 @@ class PluginFactory(Representation):
                 type = "velocity"
             else:
                 type = "force"
-            kwargs.pop("use_force_commands")
+            kwargs.pop("use_force_commands", None)
             return Motor(
                 name=kwargs["joint_name"]+"_motor",
                 type=(

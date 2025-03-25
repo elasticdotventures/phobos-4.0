@@ -679,7 +679,7 @@
       "children": {
         "pose": {
           "classname": "Pose",
-          "varname": "secure_origin"
+          "varname": "originRoot"
         },
         "inertial": {
           "classname": "Inertial",
