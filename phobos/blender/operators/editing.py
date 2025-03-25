@@ -1774,11 +1774,16 @@ class AddMotorOperator(Operator):
     bl_idname = "phobos.add_motor"
     bl_label = "Add Motor"
     bl_options = {'UNDO'}
+    bl_description = "Add a motor to the selected joint.\n" \
+                     "It is possible to add motors to multiple joints at the same time"
     lastMotorDefault = None
 
-    template : EnumProperty(items=[(n,n,n) for n in resources.get_motor_defaults()], name='Template', description="The template to use for this motor")
-    motorType : EnumProperty(items=[(n,n,n) for n in representation.Motor.BUILD_TYPES], name="Motor type", description='The motor type')
-    controllerType: EnumProperty(items=[(n,n,n) for n in representation.Motor.TYPES], name="Controller type", description='The controller type')
+    template : EnumProperty(items=[(n,n,n) for n in resources.get_motor_defaults()], name='Template',
+                            description="The template to use for this motor")
+    motorType : EnumProperty(items=[(n,n,n) for n in representation.Motor.BUILD_TYPES], name="Motor type",
+                             description='The motor type')
+    controllerType: EnumProperty(items=[(n,n,n) for n in representation.Motor.TYPES], name="Controller type",
+                                 description='The controller type')
     maxeffort : FloatProperty(
         name="Max Effort (N or Nm)", default=0.0, description="Maximum effort of the joint"
     )
@@ -1870,26 +1875,9 @@ class AddMotorOperator(Operator):
         Returns:
 
         """
-        active_obj = (
-            context.active_object
-            and context.active_object.phobostype == 'link'
-            and context.active_object.mode == 'OBJECT'
-        )
-
-        if not active_obj:
-            return False
-            # for obj in context.selected_objects:
-            #     if obj.mode == 'OBJECT' and obj.phobostype == 'link':
-            #         active_obj = obj
-            #         context.view_layer.objects.active = obj
-            #         break
-            # if not active_obj:
-        else:
-            active_obj = context.active_object
-
-        joint_obj = 'joint/type' in active_obj and active_obj['joint/type'] != 'fixed'
-
-        return joint_obj
+        objects = [o for o in context.selected_objects if o.phobostype == "link"
+                   and "joint/type" in o and o["joint/type"] != "fixed"]
+        return len(objects) > 0
 
     def execute(self, context):
         """
@@ -1900,7 +1888,8 @@ class AddMotorOperator(Operator):
         Returns:
 
         """
-        objects = [o for o in context.selected_objects if o.phobostype == "link"]
+        objects = [o for o in context.selected_objects if o.phobostype == "link"
+                   and "joint/type" in o and o["joint/type"] != "fixed"]
         for obj in objects:
             phobos2blender.createMotor(representation.Motor(
                 name=obj.name+"_motor",
@@ -1911,6 +1900,9 @@ class AddMotorOperator(Operator):
                 i=self.controli,
                 d=self.controld
             ), linkobj=obj)
+        n = len(objects)
+        s = "" if n == 1 else "s"
+        log(message=f"Added a motor to {n} joint{s}", level="INFO")
         return {'FINISHED'}
 
 
@@ -2109,6 +2101,9 @@ class AddSensorOperator(Operator):
     bl_idname = "phobos.add_sensor"
     bl_label = "Add Sensor"
     bl_options = {'REGISTER', 'UNDO'}
+    bl_description = "Add a sensor at the position of the selected object. \n" \
+    "It is possible to create a new link for the sensor on the fly. Otherwise, \n" \
+    "the next link in the hierarchy will be used to parent the sensor to"
 
 
     def sensorlist(self, context):
