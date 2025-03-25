@@ -895,7 +895,7 @@ ignoredProps = set(
 )
 
 
-# [TODO v2.0.0] Improve e.g. add edit tools
+# [TODO v2.2.0] Improve e.g. add edit tools
 class PhobosPropertyInformationPanel(bpy.types.Panel):
     """Contains all properties sorted in different categories"""
 
