@@ -679,7 +679,7 @@
       "children": {
         "pose": {
           "classname": "Pose",
-          "varname": "originRoot"
+          "varname": "origin_root"
         },
         "inertial": {
           "classname": "Inertial",
@@ -885,11 +885,31 @@
           "value_children": {
             "xyz": "axis"
           }
+        },
+        "axis2": {
+          "tag": "axis2",
+          "children": {
+            "limit": {
+              "classname": "JointLimit",
+              "varname": "limit2"
+            },
+            "dynamics": {
+              "classname": "JointDynamics",
+              "varname": "dynamics"
+            }
+          },
+          "value_children": {
+            "xyz": "axis2"
+          }
         }
       },
       "value_children": {
         "parent": "parent",
-        "child": "child"
+        "child": "child",
+        "gearbox_ratio": "gearbox_ratio",
+        "gearbox_reference_body": "gearbox_reference_body",
+        "screw_thread_pitch": "screw_thread_pitch",
+        "thread_pitch": "thread_pitch"
       }
     },
     "JointLimit": {

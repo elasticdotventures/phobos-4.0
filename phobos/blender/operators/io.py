@@ -233,6 +233,11 @@ class ExportModelOperator(Operator):
         Returns:
 
         """
+        prev_mode = bpy.context.object.mode
+        prev_active = context.active_object
+        prev_selected = context.selected_objects
+        bpy.ops.object.mode_set(mode='OBJECT')
+
         roots = ioUtils.getExportModels()
         if not roots:
             log("No properly defined models selected or present in scene.", 'ERROR')
@@ -272,6 +277,12 @@ class ExportModelOperator(Operator):
 
         log("Export successful.", "INFO", end="\n\n")
         self.report({"INFO"}, "Export successful.")
+        active = -1
+        for i, ob in enumerate(prev_selected):
+            if ob.name == prev_active.name:
+                active = i
+        sUtils.selectObjects(prev_selected, active=active)
+        bpy.ops.object.mode_set(mode=prev_mode)
         return {'FINISHED'}
 
 

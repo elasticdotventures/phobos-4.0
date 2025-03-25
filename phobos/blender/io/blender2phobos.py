@@ -435,7 +435,7 @@ def deriveLink(obj, objectlist=None, logging=True, errors=None):
         root = sUtils.getEffectiveParent(root)
 
     # Exporting pose relative to root link because gazebo 9 ignores relative_to attribute
-    # Remove originRoot in a future update
+    # Remove origin_root in a future update
 
     return representation.Link(
         name=obj.get("link/name", obj.name),  # this is for backwards compatibility normally the linkname should be the object name
@@ -481,12 +481,16 @@ def deriveJoint(obj, logging=False, adjust=False, errors=None):
         ErrorMessageWithBox(msg)
         raise KeyError("joint/type: "+msg)
 
+    axis = list(values.get("joint/axis")) if "joint/axis" in values else None
+    axis2 = list(values.get("joint/axis2")) if "joint/axis2" in values else None
+
     return representation.Joint(
         name=values.get("joint/name", obj.name),
         parent=parent.get("link/name", parent.name),  # backwards compatibility
         child=obj.get("link/name", obj.name),  # backwards compatibility
         joint_type=values["joint/type"],
-        axis=list(values.get("joint/axis", [0, 0, 1])) if values["joint/type"] in ["revolute", "prismatic", "continuous"] else None,
+        axis=axis,
+        axis2=axis2,
         origin=deriveObjectPose(obj),
         limit=representation.JointLimit(
             effort=values.get("joint/limits/effort", None),
@@ -494,6 +498,12 @@ def deriveJoint(obj, logging=False, adjust=False, errors=None):
             lower=values.get("joint/limits/lower", None),
             upper=values.get("joint/limits/upper", None)
         ) if any([k.startswith("joint/limits/") for k in values.keys()]) else None,
+        limit2=representation.JointLimit(
+            effort=values.get("joint/limits/effort", None),
+            velocity=values.get("joint/limits/velocity", None),
+            lower=values.get("joint/limits/lower2", None),
+            upper=values.get("joint/limits/upper2", None)
+        ) if "joint/limits/lower2" in values or "joint/limits/upper2" in values else None,
         dynamics=representation.JointDynamics(
             damping=values.get("joint/dynamics/damping", None),
             friction=values.get("joint/dynamics/friction", None),
@@ -506,7 +516,10 @@ def deriveJoint(obj, logging=False, adjust=False, errors=None):
             multiplier=values["joint/mimic/multiplier"],
             offset=values["joint/mimic/offset"]
         ) if "joint/mimic/joint" in values.keys() else None,
-        motor=values.get("motor/name", None)
+        motor=values.get("motor/name", None),
+        gearbox_ratio=values.get("joint/gearbox/ratio", None),
+        gearbox_reference_body=values.get("joint/gearbox/reference_body", None),
+        screw_thread_pitch=values.get("joint/screw/thread_pitch", None),
     )
 
 

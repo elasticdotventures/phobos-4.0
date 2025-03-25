@@ -1,4 +1,5 @@
 import json
+import math
 import os
 import shutil
 from copy import deepcopy
@@ -1948,10 +1949,11 @@ class Joint(Representation, SmurfBase):
                         "joint_dependencies"]
 
     def __init__(self, name=None, parent=None, child=None, joint_type=None,
-                 axis=None, origin=None, limit=None,
+                 axis=None, axis2=None, origin=None, limit=None, limit2=None,
                  dynamics=None, safety_controller=None, calibration=None,
                  mimic=None, joint_dependencies=None, motor=None,
-                 noDataPackage=None, reducedDataPackage=None, cut_joint=False, constraint_axes=None, **kwargs):
+                 noDataPackage=None, reducedDataPackage=None, cut_joint=False, constraint_axes=None,
+                 gearbox_ratio=None, gearbox_reference_body=None, screw_thread_pitch=None, **kwargs):
         assert name is not None
         self.name = name
         self.returns = ['name']
@@ -1964,8 +1966,9 @@ class Joint(Representation, SmurfBase):
         assert self.child is not None
         self.joint_type = joint_type if joint_type is not None else (kwargs["type"] if "type" in kwargs else None)
         assert self.joint_type is not None, f"Joint type of {self.name} undefined!"
+        # axis
         if axis is not None and np.linalg.norm(axis) != 0.:
-            self.axis = (np.array(axis)/np.linalg.norm(axis)).tolist() if joint_type in ['revolute', 'continuous', 'prismatic'] else None
+            self.axis = (np.array(axis)/np.linalg.norm(axis)).tolist()
         elif axis is not None and np.linalg.norm(axis) == 0. and joint_type == "fixed":
             log.debug(f'Axis of fixed joint {self.name} is of zero length, setting axis to None!')
             self.axis = None
@@ -1974,6 +1977,18 @@ class Joint(Representation, SmurfBase):
             self.axis = [0, 0, 1]
         else:
             self.axis = None
+        # axis2
+        if axis2 is not None and np.linalg.norm(axis2) != 0.:
+            self.axis2 = (np.array(axis2)/np.linalg.norm(axis2)).tolist()
+        elif axis2 is not None and np.linalg.norm(axis2) == 0.:
+            log.error(f'Axis2 of {joint_type} joint {self.name} is of zero length, setting axis2 to (0,0,1)!')
+            self.axis2 = [0, 0, 1]
+        else:
+            self.axis2 = None
+        #
+        if origin is None and cut_joint is False:
+            log.debug(f"Created joint {name} without specified origin assuming zero-transformation")
+            origin = Pose(xyz=[0, 0, 0], rpy=[0, 0, 0], relative_to=self.parent)
         # if origin is None and cut_joint is False:
         #     log.debug(f"Created joint {name} without specified origin assuming zero-transformation")
         #     origin = Pose(xyz=[0, 0, 0], rpy=[0, 0, 0], relative_to=self.parent)
@@ -1981,6 +1996,7 @@ class Joint(Representation, SmurfBase):
         if self.origin and self.origin.relative_to is None:
             self.origin.relative_to = self.parent
         self.limit = _singular(limit) if self.joint_type != "fixed" else None
+        self.limit2 = _singular(limit2) if limit2 is not None else None
         if joint_dependencies is not None:
             self.joint_dependencies = _plural(joint_dependencies) + _plural(mimic)
         else:
@@ -1988,6 +2004,13 @@ class Joint(Representation, SmurfBase):
         self.cut_joint = cut_joint
         self.constraint_axes = _plural(constraint_axes)
         self.motor = str(motor) if motor is not None else None
+
+        self.gearbox_ratio = gearbox_ratio
+        self.gearbox_reference_body = gearbox_reference_body
+
+        self.screw_thread_pitch = screw_thread_pitch
+        self.thread_pitch = - 2 * math.pi / screw_thread_pitch if screw_thread_pitch is not None else None
+
         self.noDataPackage = noDataPackage
         self.returns += ["noDataPackage"]
         self.reducedDataPackage = reducedDataPackage
@@ -1995,7 +2018,9 @@ class Joint(Representation, SmurfBase):
         # dynamics
         self.dynamics = _singular(dynamics)
         SmurfBase.__init__(self, **kwargs)
+        # [Todo v2.1.0] To safe all information in SMURF we have to add the transformation from parent_relative_origin here, but with the correct key
         self.returns += ["joint_dependencies", "parent", "child", "limit", "mimic", "axis", "dynamics"]
+        self.excludes += ["limit", "mimic", "axis", "dynamics", "limit2", "axis2"]
 
     def link_with_robot(self, robot, check_linkage_later=False):
         super(Joint, self).link_with_robot(robot, check_linkage_later=True)
