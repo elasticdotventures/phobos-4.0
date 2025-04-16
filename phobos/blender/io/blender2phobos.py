@@ -119,7 +119,7 @@ def deriveGeometry(obj, duplicate_mesh=False, fast_init=True, **kwargs):
     elif gtype == 'mesh':
         blender_mesh = obj.data.copy() if duplicate_mesh else obj.data
         return representation.Mesh(
-            scale=list(obj.matrix_world.to_scale()),
+            scale=list(obj.scale),
             mesh=blender_mesh,
             meshname=blender_mesh.name,
             fast_init=fast_init
