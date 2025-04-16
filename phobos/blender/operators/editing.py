@@ -1338,13 +1338,14 @@ class CreateCollisionObjects(Operator):
                 )
                 ob = phobos2blender.createGeometry(collision, geomsrc="collision", linkobj=sUtils.getEffectiveParent(vis, include_hidden=True, ignore_selection=True))
             else:
+                global_location = vis.matrix_world.to_translation()
                 ob = bUtils.createPrimitive(
                     collname,
                     'cylinder',
                     (1., 1., 1.),
                     defs.layerTypes['collision'],
                     materialname,
-                    phobos_vis.origin.position,
+                    global_location,
                     phobos_vis.origin.rotation,
                     'collision'
                 )
