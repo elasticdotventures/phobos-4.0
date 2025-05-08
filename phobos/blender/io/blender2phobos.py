@@ -66,16 +66,28 @@ def deriveMaterial(mat, logging=False, errors=None):
                 diffuseTexture = representation.Texture(image=tex.image)
             elif tex.outputs["Color"].links[0].to_socket.node.name == "Normal Map" and tex.image is not None:
                 normalTexture = representation.Texture(image=tex.image)
+        # A new file handler API was introduced in Blender 4.1
+        b41Export = bpy.app.version[0] == 4 and bpy.app.version[1] >= 1
         if "Specular BSDF" in mat.node_tree.nodes.keys():
             diffuse_color = mat.node_tree.nodes["Specular BSDF"].inputs["Base Color"].default_value
-            specular_color = mat.node_tree.nodes["Specular BSDF"].inputs["Specular"].default_value
-            emissive = mat.node_tree.nodes["Specular BSDF"].inputs["Emissive Color"].default_value
+            if b41Export:
+                specular_color = mat.node_tree.nodes["Specular BSDF"].inputs["Specular Tint"].default_value
+                emissive = mat.node_tree.nodes["Specular BSDF"].inputs["Emission Color"].default_value
+            else:
+                specular_color = mat.node_tree.nodes["Specular BSDF"].inputs["Specular"].default_value
+                emissive = mat.node_tree.nodes["Specular BSDF"].inputs["Emissive Color"].default_value
             shininess = 1-mat.node_tree.nodes["Specular BSDF"].inputs["Roughness"].default_value
             transparency = mat.node_tree.nodes["Specular BSDF"].inputs["Transparency"].default_value
         elif "Principled BSDF" in mat.node_tree.nodes.keys():
             diffuse_color = mat.node_tree.nodes["Principled BSDF"].inputs["Base Color"].default_value
-            specular_color = np.array(diffuse_color) * mat.node_tree.nodes["Principled BSDF"].inputs["Specular"].default_value
-            emissive = np.array(mat.node_tree.nodes["Principled BSDF"].inputs["Emission"].default_value)
+            if b41Export:
+                specular_color = np.array(diffuse_color) * mat.node_tree.nodes["Principled BSDF"].inputs[
+                    "Specular Tint"].default_value
+                emissive = np.array(mat.node_tree.nodes["Principled BSDF"].inputs["Emission Color"].default_value)
+            else:
+                specular_color = np.array(diffuse_color) * mat.node_tree.nodes["Principled BSDF"].inputs[
+                    "Specular"].default_value
+                emissive = np.array(mat.node_tree.nodes["Principled BSDF"].inputs["Emission"].default_value)
             shininess = 1-mat.node_tree.nodes["Principled BSDF"].inputs["Roughness"].default_value
             transparency = 1-mat.node_tree.nodes["Principled BSDF"].inputs["Alpha"].default_value
     if diffuse_color is None:

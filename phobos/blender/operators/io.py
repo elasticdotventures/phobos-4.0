@@ -20,7 +20,7 @@ from bpy.types import Operator
 
 from ..io.blender2phobos import deriveRobot
 from ..io.phobos2blender import createRobot
-from ..phoboslog import log
+from ..phoboslog import log, ErrorMessageWithBox
 from ..utils import blender as bUtils
 from ..utils import io as ioUtils
 from ..utils import naming as nUtils
@@ -140,7 +140,7 @@ class ExportModelOperator(Operator):
         elif modellist:
             self.modelname = modellist[0][0]
             return self.execute(context)
-        log("No properly defined models to export.", 'ERROR')
+        ErrorMessageWithBox("No properly defined models to export.")
         return {'CANCELLED'}
 
     def exportModel(self, root, exportpath='.'):
@@ -233,19 +233,31 @@ class ExportModelOperator(Operator):
         Returns:
 
         """
-        prev_mode = bpy.context.object.mode
         prev_active = context.active_object
         prev_selected = context.selected_objects
+        if prev_active is None:
+            if len(context.selectable_objects) == 0:
+                ErrorMessageWithBox("No exportable objects")
+                return {'CANCELLED'}
+            if ioUtils.getExpSettings().selectedOnly:
+                if len(prev_selected) == 0:
+                    ErrorMessageWithBox("No objects are selected to export. Deselect export option 'Selected only' or select objects")
+                    return {'CANCELLED'}
+                else:
+                    context.view_layer.objects.active = context.selected_objects[0]
+            else:
+                context.view_layer.objects.active = context.selectable_objects[0]
+        prev_mode = bpy.context.object.mode
         bpy.ops.object.mode_set(mode='OBJECT')
 
         roots = ioUtils.getExportModels()
         if not roots:
-            log("No properly defined models selected or present in scene.", 'ERROR')
+            ErrorMessageWithBox("No properly defined models selected or present in scene.")
             return {'CANCELLED'}
         elif not self.exportall:
             roots = [root for root in roots if nUtils.getModelName(root) == self.modelname]
             if len(roots) > 1:
-                log(
+                ErrorMessageWithBox(
                     "Ambiguous model definitions: "
                     + self.modelname
                     + " exists "
@@ -264,25 +276,18 @@ class ExportModelOperator(Operator):
             log("Export path: " + exportpath, "DEBUG")
             self.exportModel(root, exportpath)
 
-        # select all exported models after export is done
-        if ioUtils.getExpSettings().selectedOnly:
-            for root in roots:
-                objectlist = sUtils.getChildren(root, selected_only=True, include_hidden=False)
-                sUtils.selectObjects(objectlist, clear=False)
-        else:
-            bpy.ops.object.select_all(action='DESELECT')
-            for root in roots:
-                sUtils.selectObjects(list([root]), False)
-            bpy.ops.phobos.select_model()
-
         log("Export successful.", "INFO", end="\n\n")
         self.report({"INFO"}, "Export successful.")
+
+        # Select previously selected objects
         active = -1
-        for i, ob in enumerate(prev_selected):
-            if ob.name == prev_active.name:
-                active = i
-        sUtils.selectObjects(prev_selected, active=active)
+        if prev_active is not None:
+            for i, ob in enumerate(prev_selected):
+                if ob.name == prev_active.name:
+                    active = i
+        context.view_layer.objects.active = context.selectable_objects[0]
         bpy.ops.object.mode_set(mode=prev_mode)
+        sUtils.selectObjects(prev_selected, active=active)
         return {'FINISHED'}
 
 
