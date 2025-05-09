@@ -809,19 +809,32 @@ class Mesh(Representation, SmurfBase):
                     self._changed = True
                     break
         if BPY_AVAILABLE and self.mesh_object is None:
+            # A new file handler API was introduced in Blender 4.1
+            b41Import = bpy.app.version[0] == 4 and bpy.app.version[1] >= 1
             bpy.ops.object.select_all(action='DESELECT')
             if self.input_type == "file_stl":
-                bpy.ops.import_mesh.stl(filepath=self.input_file)
+                if b41Import:
+                    bpy.ops.wm.stl_import(filepath=self.input_file)
+                else:
+                    bpy.ops.import_mesh.stl(filepath=self.input_file)
                 self._mesh_object = bpy.data.meshes[bpy.context.object.data.name]
                 bpy.ops.object.delete()
             elif self.input_type in ["file_obj", "file_mars_obj"]:
-                bpy.ops.import_scene.obj(filepath=self.input_file,
-                                         axis_forward=self.mesh_orientation["forward"],
-                                         axis_up=self.mesh_orientation["up"],
-                                         use_split_objects=False,
-                                         use_split_groups=False,
-                                         use_groups_as_vgroups=True,
-                                         split_mode="OFF")
+                if b41Import:
+                    bpy.ops.wm.obj_import(filepath=self.input_file,
+                                             forward_axis=self.mesh_orientation["forward"],
+                                             up_axis=self.mesh_orientation["up"],
+                                             use_split_objects=False,
+                                             use_split_groups=False,
+                                             import_vertex_groups=True)
+                else:
+                    bpy.ops.import_scene.obj(filepath=self.input_file,
+                                             axis_forward=self.mesh_orientation["forward"],
+                                             axis_up=self.mesh_orientation["up"],
+                                             use_split_objects=False,
+                                             use_split_groups=False,
+                                             use_groups_as_vgroups=True,
+                                             split_mode="OFF")
                 assert len(bpy.context.selected_objects) == 1
                 object = bpy.context.selected_objects[0]
                 if object.data.name != self.unique_name:

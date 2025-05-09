@@ -280,14 +280,10 @@ class ExportModelOperator(Operator):
         self.report({"INFO"}, "Export successful.")
 
         # Select previously selected objects
-        active = -1
-        if prev_active is not None:
-            for i, ob in enumerate(prev_selected):
-                if ob.name == prev_active.name:
-                    active = i
+        prev_active_index = prev_selected.index(prev_active) if prev_active in prev_selected else -1
         context.view_layer.objects.active = context.selectable_objects[0]
         bpy.ops.object.mode_set(mode=prev_mode)
-        sUtils.selectObjects(prev_selected, active=active)
+        sUtils.selectObjects(prev_selected, active=prev_active_index)
         return {'FINISHED'}
 
 
