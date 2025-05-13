@@ -28,7 +28,7 @@ from ..utils import selection as sUtils
 
 from ... import core
 from ... import defs as phobos_defs
-from ...utils.resources import get_default_rel_mesh_pathes
+from ...utils.resources import get_default_rel_mesh_paths
 
 
 # [TODO v2.1.0] let this use the phobos API as well
@@ -215,7 +215,7 @@ class ExportModelOperator(Operator):
         robot.export(
             outputdir=exportpath,
             export_config=export_config,
-            rel_mesh_pathes=get_default_rel_mesh_pathes(),
+            rel_mesh_paths=get_default_rel_mesh_paths(),
             ros_pkg_name=None if len(ioUtils.getRosPackageName()) == 0 else ioUtils.getRosPackageName(),
             with_meshes=True,
             use_existing_meshes=len([mt for mt in phobos_defs.MESH_TYPES if getattr(bpy.context.scene, "export_mesh_"+mt, False)]) == 0,

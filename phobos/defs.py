@@ -3,7 +3,7 @@ log = get_logger(__name__)
 
 EULER_CONVENTION = 'xyz'
 RPY_CONVENTION = 'xyz'
-MESH_TYPES = ["stl", "obj", "bobj", "dae"]
+MESH_TYPES = ["stl", "obj", "bobj", "dae", "glb"]
 EXPORT_TYPES = ["smurf", "urdf", "sdf", "joint_limits", "pdf"]
 IMPORT_TYPES = ["smurf", "urdf", "sdf"]
 KINEMATIC_TYPES = ["urdf", "sdf"]
