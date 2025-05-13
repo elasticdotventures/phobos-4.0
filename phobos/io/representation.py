@@ -810,19 +810,32 @@ class Mesh(Representation, SmurfBase):
                     self._changed = True
                     break
         if BPY_AVAILABLE and self.mesh_object is None:
+            # A new file handler API was introduced in Blender 4.1
+            b41Import = bpy.app.version[0] == 4 and bpy.app.version[1] >= 1
             bpy.ops.object.select_all(action='DESELECT')
             if self.input_type == "file_stl":
-                bpy.ops.import_mesh.stl(filepath=self.input_file)
+                if b41Import:
+                    bpy.ops.wm.stl_import(filepath=self.input_file)
+                else:
+                    bpy.ops.import_mesh.stl(filepath=self.input_file)
                 self._mesh_object = bpy.data.meshes[bpy.context.object.data.name]
                 bpy.ops.object.delete()
             elif self.input_type in ["file_obj", "file_mars_obj"]:
-                bpy.ops.import_scene.obj(filepath=self.input_file,
-                                         axis_forward=self.mesh_orientation["forward"],
-                                         axis_up=self.mesh_orientation["up"],
-                                         use_split_objects=False,
-                                         use_split_groups=False,
-                                         use_groups_as_vgroups=True,
-                                         split_mode="OFF")
+                if b41Import:
+                    bpy.ops.wm.obj_import(filepath=self.input_file,
+                                             forward_axis=self.mesh_orientation["forward"],
+                                             up_axis=self.mesh_orientation["up"],
+                                             use_split_objects=False,
+                                             use_split_groups=False,
+                                             import_vertex_groups=True)
+                else:
+                    bpy.ops.import_scene.obj(filepath=self.input_file,
+                                             axis_forward=self.mesh_orientation["forward"],
+                                             axis_up=self.mesh_orientation["up"],
+                                             use_split_objects=False,
+                                             use_split_groups=False,
+                                             use_groups_as_vgroups=True,
+                                             split_mode="OFF")
                 assert len(bpy.context.selected_objects) == 1
                 object = bpy.context.selected_objects[0]
                 if object.data.name != self.unique_name:
@@ -1037,6 +1050,8 @@ class Mesh(Representation, SmurfBase):
             self.write_history(targetpath)
             return
         # export for blender
+        # A new file handler API was introduced in Blender 4.1
+        b41Export = bpy.app.version[0] == 4 and bpy.app.version[1] >= 1
         if BPY_AVAILABLE and isinstance(self.mesh_object, bpy.types.Mesh):
             from ..blender.utils import blender as bUtils
             objname = "tmp_export_"+self.unique_name
@@ -1048,20 +1063,37 @@ class Mesh(Representation, SmurfBase):
             if format.lower() == 'obj':
                 axis_forward = bpy.context.preferences.addons["phobos"].preferences.obj_axis_forward
                 axis_up = bpy.context.preferences.addons["phobos"].preferences.obj_axis_up
-                bpy.ops.export_scene.obj(
-                    filepath=targetpath,
-                    use_selection=True,
-                    use_normals=True,
-                    use_materials=False,
-                    use_mesh_modifiers=True,
-                    use_blen_objects=False,
-                    axis_forward=axis_forward,
-                    axis_up=axis_up,
-                )
+                if b41Export:
+                    bpy.ops.wm.obj_export(
+                        filepath=targetpath,
+                        export_selected_objects=True,
+                        export_normals=True,
+                        export_materials=False,
+                        apply_modifiers=True,
+                        forward_axis=axis_forward,
+                        up_axis=axis_up,
+                    )
+                else:
+                    bpy.ops.export_scene.obj(
+                        filepath=targetpath,
+                        use_selection=True,
+                        use_normals=True,
+                        use_materials=False,
+                        use_mesh_modifiers=True,
+                        use_blen_objects=False,
+                        axis_forward=axis_forward,
+                        axis_up=axis_up,
+                    )
             elif format.lower() == 'stl':
-                bpy.ops.export_mesh.stl(filepath=targetpath, use_selection=True, use_mesh_modifiers=True)
+                if b41Export:
+                    bpy.ops.wm.stl_export(filepath=targetpath, export_selected_objects=True, apply_modifiers=True)
+                else:
+                    bpy.ops.export_mesh.stl(filepath=targetpath, use_selection=True, use_mesh_modifiers=True)
             elif format.lower() == 'dae':
-                bpy.ops.wm.collada_export(filepath=targetpath, selected=True)
+                if b41Export:
+                    bpy.ops.wm.collada_export(filepath=targetpath, selected=True)
+                else:
+                    bpy.ops.wm.collada_export(filepath=targetpath, selected=True)
             elif format.lower() == "bobj":
                 log.debug(f"Exporting {targetpath} with {len(self.mesh_object.vertices)} vertices...")
                 mesh_io.write_bobj(targetpath, **mesh_io.blender_2_mesh_info_dict(self.mesh_object))

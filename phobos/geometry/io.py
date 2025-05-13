@@ -69,7 +69,6 @@ def blender_2_mesh_info_dict(mesh):
         import bpy
     assert isinstance(mesh, bpy.types.Mesh)
     mesh.calc_loop_triangles()
-    mesh.calc_normals()
 
     uv_layer = mesh.uv_layers.active
     write_uv = uv_layer is not None and len(uv_layer.data) > 0
