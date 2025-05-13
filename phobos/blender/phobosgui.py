@@ -1409,7 +1409,10 @@ class PhobosExportPanel(bpy.types.Panel):
         cmesh.label(text="Meshes")
         for meshtype in phobos_defs.MESH_TYPES:
             typename = "export_mesh_" + meshtype
-            cmesh.prop(bpy.context.scene, typename)
+            if meshtype == "bobj":
+                cmesh.prop(bpy.context.scene, typename, text="bobj (exp.)")
+            else:
+                cmesh.prop(bpy.context.scene, typename)
 
         # Settings for submodel export
         inlayout2 = self.layout.split()
