@@ -30,7 +30,7 @@ from bpy.props import (
     BoolVectorProperty,
     CollectionProperty,
 )
-from bpy.types import Operator
+from bpy.types import Operator, PropertyGroup
 from idprop.types import IDPropertyGroup
 from phobos.io import hyrodyn
 
@@ -515,6 +515,10 @@ class SetPhobosType(Operator):
         for obj in context.selected_objects:
             obj.phobostype = self.phobostype
         phobosgui.updateSidebar()
+
+        if self.phobostype in ["collision", "visual"]:
+            bpy.ops.phobos.define_geometry()
+
         return {'FINISHED'}
 
     @classmethod
@@ -528,6 +532,15 @@ class SetPhobosType(Operator):
 
         """
         return context.selected_objects
+
+    def draw(self, context):
+
+        layout = self.layout
+
+        layout.prop(self, 'phobostype')
+
+        if self.phobostype in ["collision", "visual"]:
+            layout.prop(context.scene.set_geometry_type_props, 'geomType')
 
     def invoke(self, context, event):
         """
@@ -778,16 +791,17 @@ class RenameCustomProperty(Operator):
         return ob is not None and ob.mode == 'OBJECT' and len(context.selected_objects) > 0
 
 
+class SetGeometryTypeProperties(PropertyGroup):
+    geomType: EnumProperty(
+        items=defs.geometrytypes, name="Geometry", default="box", description="Phobos geometry type"
+    )
+
 class SetGeometryType(Operator):
     """Edit geometry type of selected object(s)"""
 
     bl_idname = "phobos.define_geometry"
     bl_label = "Define Geometry"
     bl_options = {'UNDO'}
-
-    geomType : EnumProperty(
-        items=defs.geometrytypes, name="Type", default="box", description="Phobos geometry type"
-    )
 
     def execute(self, context):
         """
@@ -801,13 +815,13 @@ class SetGeometryType(Operator):
         objs = context.selected_objects
         for obj in objs:
             if obj.phobostype == 'collision' or obj.phobostype == 'visual':
-                obj['geometry/type'] = self.geomType
+                obj['geometry/type'] = context.scene.set_geometry_type_props.geomType
             else:
                 log("The object '" + obj.name + "' is no collision or visual.", 'WARNING')
 
         log(
             "Changed geometry type for {} object{}".format(len(objs), 's' if len(objs) > 1 else '')
-            + " to {}.".format(self.geomType),
+            + " to {}.".format(context.scene.set_geometry_type_props.geomType),
             'INFO',
         )
         log("    Objects: " + str([obj.name for obj in objs]), 'DEBUG')
@@ -838,7 +852,7 @@ class SetGeometryType(Operator):
         """
         layout = self.layout
 
-        layout.prop(self, 'geomType')
+        layout.prop(context.scene.set_geometry_type_props, 'geomType')
 
     def invoke(self, context, event):
         """
@@ -3885,6 +3899,7 @@ classes = (
     CreateInterfaceOperator,
     CopyCustomProperties,
     RenameCustomProperty,
+    SetGeometryTypeProperties,
     SetGeometryType,
     SmoothenSurfaceOperator,
     EditInertialData,
@@ -3920,9 +3935,13 @@ def register():
     for classdef in classes:
         bpy.utils.register_class(classdef)
 
+    bpy.types.Scene.set_geometry_type_props = bpy.props.PointerProperty(type=SetGeometryTypeProperties)
+
 
 def unregister():
     """TODO Missing documentation"""
     print("Unregistering operators.editing...")
     for classdef in classes:
         bpy.utils.unregister_class(classdef)
+
+    del bpy.types.Scene.set_geometry_type_props
