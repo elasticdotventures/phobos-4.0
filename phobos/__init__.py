@@ -89,6 +89,8 @@ def install_requirement(package_name, upgrade_pip=False, lib=None, ensure_pip=Tr
 
 def check_requirements(optional=False, extra=False, force=False, upgrade_pip=False, lib=None, install=True):
     import importlib
+    import importlib.util
+    import importlib.machinery
     print("Checking requirements:")
     # Ensure pip is installed
     try:
