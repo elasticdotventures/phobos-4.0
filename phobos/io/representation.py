@@ -21,6 +21,7 @@ from ..utils import misc, git, transform
 from ..utils.transform import inv
 from ..utils.xml import read_relative_filename
 from .. import defs as phobos_defs
+from ..blender.utils.blender import blenderVersionIsAtLeast
 
 MESH_INFO_KEYS = ["vertex_normals", "texture_coords", "vertices", "faces"]
 MESH_DATA_TYPES = ["trimesh.base.Trimesh", "trimesh.scene.scene.Scene", "file_obj", "file_stl", "file_dae", "file_iv"]
@@ -811,7 +812,7 @@ class Mesh(Representation, SmurfBase):
                     break
         if BPY_AVAILABLE and self.mesh_object is None:
             # A new file handler API was introduced in Blender 4.1
-            b41Import = bpy.app.version[0] == 4 and bpy.app.version[1] >= 1
+            b41Import = blenderVersionIsAtLeast((4,1))
             bpy.ops.object.select_all(action='DESELECT')
             if self.input_type == "file_stl":
                 if b41Import:
@@ -1051,7 +1052,7 @@ class Mesh(Representation, SmurfBase):
             return
         # export for blender
         # A new file handler API was introduced in Blender 4.1
-        b41Export = bpy.app.version[0] == 4 and bpy.app.version[1] >= 1
+        b41Export = blenderVersionIsAtLeast((4,1))
         if BPY_AVAILABLE and isinstance(self.mesh_object, bpy.types.Mesh):
             from ..blender.utils import blender as bUtils
             objname = "tmp_export_"+self.unique_name
@@ -1063,12 +1064,14 @@ class Mesh(Representation, SmurfBase):
             if format.lower() == 'obj':
                 axis_forward = bpy.context.preferences.addons["phobos"].preferences.obj_axis_forward
                 axis_up = bpy.context.preferences.addons["phobos"].preferences.obj_axis_up
+                # If user wants to export texture, we also export .mtl file associated to the .obj file
+                export_texture = bpy.context.scene.phobosexportsettings.exportTextures
                 if b41Export:
                     bpy.ops.wm.obj_export(
                         filepath=targetpath,
                         export_selected_objects=True,
                         export_normals=True,
-                        export_materials=False,
+                        export_materials=export_texture,
                         apply_modifiers=True,
                         forward_axis=axis_forward,
                         up_axis=axis_up,
@@ -1078,7 +1081,7 @@ class Mesh(Representation, SmurfBase):
                         filepath=targetpath,
                         use_selection=True,
                         use_normals=True,
-                        use_materials=False,
+                        use_materials=export_texture,
                         use_mesh_modifiers=True,
                         use_blen_objects=False,
                         axis_forward=axis_forward,
