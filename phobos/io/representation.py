@@ -1066,6 +1066,10 @@ class Mesh(Representation, SmurfBase):
                 axis_up = bpy.context.preferences.addons["phobos"].preferences.obj_axis_up
                 # If user wants to export texture, we also export .mtl file associated to the .obj file
                 export_texture = bpy.context.scene.phobosexportsettings.exportTextures
+                # Adapt export path type for the .mtl files to also use relative path
+                path_mode_relative = "AUTO"
+                if "relative" in getattr(bpy.context.scene.phobosexportsettings, "urdfOutputPathtype"):
+                    path_mode_relative = "RELATIVE"
                 if b41Export:
                     bpy.ops.wm.obj_export(
                         filepath=targetpath,
@@ -1075,6 +1079,7 @@ class Mesh(Representation, SmurfBase):
                         apply_modifiers=True,
                         forward_axis=axis_forward,
                         up_axis=axis_up,
+                        path_mode=path_mode_relative,
                     )
                 else:
                     bpy.ops.export_scene.obj(
@@ -1086,6 +1091,7 @@ class Mesh(Representation, SmurfBase):
                         use_blen_objects=False,
                         axis_forward=axis_forward,
                         axis_up=axis_up,
+                        path_mode=path_mode_relative,
                     )
             elif format.lower() == 'stl':
                 if b41Export:
