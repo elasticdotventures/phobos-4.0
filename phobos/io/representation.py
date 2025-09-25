@@ -1029,7 +1029,7 @@ class Mesh(Representation, SmurfBase):
             else:
                 log.warn(f"Couldn't provide mesh {self.unique_name} to {targetpath}, because this mesh can't be exported as bobj")
             return
-        elif format.lower() == "bobj" and (not self._info_in_sync and "texture_coords" in self._mesh_information):
+        elif format.lower() == "bobj" and (not self._info_in_sync and self._mesh_information is not None and "texture_coords" in self._mesh_information):
             if throw_on_invalid_bobj:
                 raise IOError(
                     f"Couldn't provide mesh {self.unique_name} to {targetpath}, because this mesh has been edited and thus the textures might have get mixed up.")
