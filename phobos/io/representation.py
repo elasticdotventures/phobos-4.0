@@ -1072,12 +1072,9 @@ class Mesh(Representation, SmurfBase):
                     path_mode_relative = "RELATIVE"
                 if b41Export:
                     # Adapt axis forward and UP to match the expected values
-                    axis_forward = "NEGATIVE_X" if axis_forward == "-X" else axis_forward
-                    axis_forward = "NEGATIVE_Y" if axis_forward == "-Y" else axis_forward
-                    axis_forward = "NEGATIVE_Z" if axis_forward == "-Z" else axis_forward
-                    axis_up = "NEGATIVE_X" if axis_up == "-X" else axis_up
-                    axis_up = "NEGATIVE_Y" if axis_up == "-Y" else axis_up
-                    axis_up = "NEGATIVE_Z" if axis_up == "-Z" else axis_up
+                    # E.g. "-X" becomes "NEGATIVE_X"
+                    axis_forward = axis_forward.replace("-", "NEGATIVE_")
+                    axis_up = axis_up.replace("-", "NEGATIVE_")
                     bpy.ops.wm.obj_export(
                         filepath=targetpath,
                         export_selected_objects=True,
