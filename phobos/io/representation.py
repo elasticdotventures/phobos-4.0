@@ -1071,6 +1071,13 @@ class Mesh(Representation, SmurfBase):
                 if "relative" in getattr(bpy.context.scene.phobosexportsettings, "urdfOutputPathtype"):
                     path_mode_relative = "RELATIVE"
                 if b41Export:
+                    # Adapt axis forward and UP to match the expected values
+                    axis_forward = "NEGATIVE_X" if axis_forward == "-X" else axis_forward
+                    axis_forward = "NEGATIVE_Y" if axis_forward == "-Y" else axis_forward
+                    axis_forward = "NEGATIVE_Z" if axis_forward == "-Z" else axis_forward
+                    axis_up = "NEGATIVE_X" if axis_up == "-X" else axis_up
+                    axis_up = "NEGATIVE_Y" if axis_up == "-Y" else axis_up
+                    axis_up = "NEGATIVE_Z" if axis_up == "-Z" else axis_up
                     bpy.ops.wm.obj_export(
                         filepath=targetpath,
                         export_selected_objects=True,
