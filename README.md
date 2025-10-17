@@ -7,7 +7,7 @@
 ![Phobos](https://github.com/dfki-ric/phobos/wiki/img/phobos_logo_small.png)
 
 Phobos is both a CLI tool and add-on for the open-source 3D modeling software
-[Blender v3.3LTS](https://www.blender.org/download/lts/3-3/) to support your robot model creation and editing.
+[Blender 5.x](https://www.blender.org/download/) to support your robot model creation and editing.
 
 The Blender add-on enables the creation of WYSIWYG robot
 models for use in robot frameworks like [ROS](http://wiki.ros.org/) and
@@ -92,7 +92,7 @@ If not already visible, one can find a very small arrow to open the Blender tool
 
 ![Small arrow to open the phobos toolbar widget.](https://github.com/dfki-ric/phobos/wiki/img/blender_phobos_menu_open.png)
 
-Phobos is currently tested and running with Blender v3.3 LTS.
+Phobos is currently verified against Blender 4.2 LTS and the Blender 5.0 beta builds.
 
 ### CLI
 Install the requirements by executing `install_requirements.py` with the python you want to install phobos to:
@@ -109,6 +109,33 @@ pip install .
 or with autoproj:
 1) Add the package to your buildconf/package_set
 2) Install via `amake`
+
+### Docker
+
+A headless runtime that ships the `bpy` wheels and the Phobos add-on is defined in the repository `Dockerfile`.
+
+Build the container (override `BPY_VERSION` to track a newer Blender release such as 5.0 when available):
+
+```bash
+docker build -t phobos:latest . --build-arg BPY_VERSION=4.2.0
+```
+
+Run the CLI entry point:
+
+```bash
+docker run --rm -it phobos --help
+```
+
+To work with models on the host, mount the workspace and point Blender to the shared directory:
+
+```bash
+docker run --rm -it \
+  -v "$(pwd)":/workspace \
+  -w /workspace \
+  phobos convert --help
+```
+
+The add-on is pre-symlinked into `/opt/blender-user-scripts/addons/phobos`. The image ships the headless `bpy` runtime; if you need the full Blender UI, extend the image with the official Blender builds and forward the required display or virtual framebuffer devices.
 
 ## Overview
 

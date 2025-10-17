@@ -815,14 +815,14 @@ class Mesh(Representation, SmurfBase):
             b41Import = blenderVersionIsAtLeast((4,1))
             bpy.ops.object.select_all(action='DESELECT')
             if self.input_type == "file_stl":
-                if b41Import:
+                if b41Import and hasattr(bpy.ops.wm, "stl_import"):
                     bpy.ops.wm.stl_import(filepath=self.input_file)
                 else:
                     bpy.ops.import_mesh.stl(filepath=self.input_file)
                 self._mesh_object = bpy.data.meshes[bpy.context.object.data.name]
                 bpy.ops.object.delete()
             elif self.input_type in ["file_obj", "file_mars_obj"]:
-                if b41Import:
+                if b41Import and hasattr(bpy.ops.wm, "obj_import"):
                     bpy.ops.wm.obj_import(filepath=self.input_file,
                                              forward_axis=self.mesh_orientation["forward"],
                                              up_axis=self.mesh_orientation["up"],
@@ -843,12 +843,15 @@ class Mesh(Representation, SmurfBase):
                     object.data.name = self.unique_name
                 try:
                     self._mesh_object = bpy.data.meshes[self.unique_name]
-                except KeyError as e:
+                except KeyError:
                     log.warning("The mesh couldn't be found by the unique_name, trying to find it by the shortened name")
                     try:
                         self._mesh_object = bpy.data.meshes[self.unique_name[:63]]
-                    except KeyError as e:
-                        raise KeyError(f"Couldn't find loaded mesh {self.unique_name}. The following were found: {bpy.data.meshes.keys()}")
+                    except KeyError as exc:
+                        raise KeyError(
+                            f"Couldn't find loaded mesh {self.unique_name}. "
+                            f"The following were found: {list(bpy.data.meshes.keys())}"
+                        ) from exc
                 # with obj file import, blender only turns the object, not the vertices,
                 # leaving a rotation in the matrix_basis, which we here get rid of
                 bpy.ops.object.transform_apply(rotation=True)
@@ -909,8 +912,8 @@ class Mesh(Representation, SmurfBase):
                     self.mesh_information = mesh_io.parse_bobj(self.input_file)
                     self._mesh_object = bpy.data.meshes.new(self.unique_name)
                     mesh.from_pydata(self.mesh_information["vertices"], [], [f[0] for f in self.mesh_information["faces"]])
-                except:
-                    raise ImportError("BOBJ loading is an experimental feature. If you have another mesh source try that.")
+                except Exception as exc:
+                    raise ImportError("BOBJ loading is an experimental feature. If you have another mesh source try that.") from exc
             elif self.input_type == "file_glb":
                 bpy.ops.import_scene.gltf(filepath=self.input_file)
                 self._mesh_object = bpy.data.meshes[bpy.context.object.data.name]
@@ -1065,12 +1068,14 @@ class Mesh(Representation, SmurfBase):
                 axis_forward = bpy.context.preferences.addons["phobos"].preferences.obj_axis_forward
                 axis_up = bpy.context.preferences.addons["phobos"].preferences.obj_axis_up
                 # If user wants to export texture, we also export .mtl file associated to the .obj file
-                export_texture = bpy.context.scene.phobosexportsettings.exportTextures
+                export_settings = getattr(bpy.context.scene, "phobosexportsettings", None)
+                export_texture = bool(getattr(export_settings, "exportTextures", False)) if export_settings else False
                 # Adapt export path type for the .mtl files to also use relative path
                 path_mode_relative = "AUTO"
-                if "relative" in getattr(bpy.context.scene.phobosexportsettings, "urdfOutputPathtype"):
+                pathtype = getattr(export_settings, "urdfOutputPathtype", "") if export_settings else ""
+                if isinstance(pathtype, str) and "relative" in pathtype.lower():
                     path_mode_relative = "RELATIVE"
-                if b41Export:
+                if b41Export and hasattr(bpy.ops.wm, "obj_export"):
                     # Adapt axis forward and UP to match the expected values
                     # E.g. "-X" becomes "NEGATIVE_X"
                     axis_forward = axis_forward.replace("-", "NEGATIVE_")
@@ -1098,7 +1103,7 @@ class Mesh(Representation, SmurfBase):
                         path_mode=path_mode_relative,
                     )
             elif format.lower() == 'stl':
-                if b41Export:
+                if b41Export and hasattr(bpy.ops.wm, "stl_export"):
                     bpy.ops.wm.stl_export(filepath=targetpath, export_selected_objects=True, apply_modifiers=True)
                 else:
                     bpy.ops.export_mesh.stl(filepath=targetpath, use_selection=True, use_mesh_modifiers=True)

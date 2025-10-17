@@ -1064,7 +1064,8 @@ class GenerateInertialObjectsOperator(Operator):
     _toggling : BoolProperty(
         name="Ensure no infinite recursion when toggling visuals and collisions",
         default=False,
-        description="Used to avoid infine recursion when toggling visuals/collisions",
+        description="Used internally to avoid infinite recursion when toggling visuals/collisions",
+        options={'HIDDEN'},
     )
 
     def toggleVisual(self, context):
