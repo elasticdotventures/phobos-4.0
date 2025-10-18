@@ -7,8 +7,14 @@ from xml.etree import ElementTree as ET
 
 import numpy
 import numpy as np
-import trimesh
 import traceback
+
+# Lazy import trimesh - it's an optional dependency
+trimesh = None
+try:
+    import trimesh
+except ImportError:
+    pass  # trimesh is optional, will be None if not available
 
 from .base import Representation
 from .smurf_reflection import SmurfBase
@@ -41,6 +47,19 @@ if BPY_AVAILABLE:
 
 from ..commandline_logging import get_logger
 log = get_logger(__name__)
+
+# Helper functions for trimesh type checking when trimesh might not be available
+def _is_trimesh(obj):
+    """Check if obj is a trimesh.Trimesh instance, returns False if trimesh not available."""
+    return trimesh is not None and isinstance(obj, trimesh.Trimesh)
+
+def _is_trimesh_scene(obj):
+    """Check if obj is a trimesh.Scene instance, returns False if trimesh not available."""
+    return trimesh is not None and isinstance(obj, trimesh.Scene)
+
+def _is_trimesh_or_scene(obj):
+    """Check if obj is trimesh.Trimesh or trimesh.Scene, returns False if trimesh not available."""
+    return trimesh is not None and (isinstance(obj, trimesh.Trimesh) or isinstance(obj, trimesh.Scene))
 
 
 def _joint_relative_origin_getter(instance):
@@ -549,7 +568,7 @@ class Mesh(Representation, SmurfBase):
             self.input_file = None
             self.unique_name = meshname
             self._mesh_information = None
-            if isinstance(mesh, trimesh.Trimesh) and not fast_init:
+            if _is_trimesh(mesh) and not fast_init:
                 self._mesh_information = mesh_io.trimesh_2_mesh_info_dict(mesh)
             elif BPY_AVAILABLE and isinstance(mesh, bpy.types.Mesh):
                 if not fast_init:
@@ -622,7 +641,7 @@ class Mesh(Representation, SmurfBase):
 
     @mesh_object.setter
     def mesh_object(self, value):
-        assert isinstance(value, trimesh.Trimesh) or isinstance(value, trimesh.Scene) or isinstance(value, bpy.types.Mesh)
+        assert _is_trimesh_or_scene(value) or isinstance(value, bpy.types.Mesh)
         self.history.append(f"manually setting mesh_object by value of {type(value)}")
         self._operations.append("_manual_override")
         self._changed = True
@@ -855,7 +874,7 @@ class Mesh(Representation, SmurfBase):
                 # with obj file import, blender only turns the object, not the vertices,
                 # leaving a rotation in the matrix_basis, which we here get rid of
                 bpy.ops.object.transform_apply(rotation=True)
-                if isinstance(mesh_io.import_mesh(self.input_file), trimesh.Trimesh):
+                if _is_trimesh(mesh_io.import_mesh(self.input_file)):
                     try:
                         self._mesh_information = mesh_io.parse_obj(self.input_file)
                     except Exception as e:
@@ -928,7 +947,7 @@ class Mesh(Representation, SmurfBase):
                 self._mesh_object = mesh_io.import_mesh(self.input_file)
             elif self.input_type in ["file_obj", "file_mars_obj"]:
                 self._mesh_object = mesh_io.import_mesh(self.input_file)
-                if isinstance(self.mesh_object, trimesh.Trimesh):
+                if _is_trimesh(self.mesh_object):
                     try:
                         self._mesh_information = mesh_io.parse_obj(self.input_file)
                     except Exception as e:
@@ -1131,8 +1150,10 @@ class Mesh(Representation, SmurfBase):
             self.write_history(targetpath)
             return
         # export from trimesh
-        assert isinstance(self.mesh_object, trimesh.Trimesh) or isinstance(self.mesh_object, trimesh.Scene)
+        assert _is_trimesh_or_scene(self.mesh_object)
         if format.lower() == "dae":
+            if trimesh is None:
+                raise ImportError("trimesh is required for DAE export but is not installed")
             dae_xml = trimesh.exchange.dae.export_collada(self.mesh_object)
             if self.material is not None:
                 dae_xml = dae_xml.decode(json.detect_encoding(dae_xml))
@@ -1146,7 +1167,7 @@ class Mesh(Representation, SmurfBase):
                     f.write(dae_xml)
             exp_op = "trimesh_export"
         elif format.lower() == "bobj":
-            assert isinstance(self.mesh_object, trimesh.Trimesh),\
+            assert _is_trimesh(self.mesh_object),\
                 f"Export to bobj only possible from trimesh.Trimesh not for {type(self.mesh_object)}"
             log.debug(f"Exporting {targetpath} with {len(self.mesh_object.vertices)} vertices...")
             mesh_io.write_bobj(targetpath, **mesh_io.trimesh_2_mesh_info_dict(self.mesh_object))
@@ -1199,7 +1220,7 @@ class Mesh(Representation, SmurfBase):
     # methods that make changes on the mesh
     def apply_scale(self):
         self.load_mesh()
-        if isinstance(self.mesh_object, trimesh.Trimesh) or isinstance(self.mesh_object, trimesh.Scene):
+        if _is_trimesh_or_scene(self.mesh_object):
             self.mesh_object.apply_transform(np.diag(list(self.scale) + [1]))
         elif BPY_AVAILABLE and isinstance(self.mesh_object, bpy.types.Mesh):
             from ..blender.utils import blender as bUtils
@@ -1228,7 +1249,7 @@ class Mesh(Representation, SmurfBase):
 
     def improve_mesh(self):
         self.load_mesh()
-        if isinstance(self.mesh_object, trimesh.Trimesh):
+        if _is_trimesh(self.mesh_object):
             self._changed = True
             self._info_in_sync = False
             self._mesh_object = improve_mesh(self.mesh_object)
@@ -1241,7 +1262,7 @@ class Mesh(Representation, SmurfBase):
 
     def reduce_mesh(self, factor, max_faces=None, min_faces=None):
         self.load_mesh()
-        if isinstance(self.mesh_object, trimesh.Trimesh):
+        if _is_trimesh(self.mesh_object):
             self._changed = True
             self._info_in_sync = False
             self._mesh_object = reduce_mesh(self.mesh_object, factor=factor, max_faces=max_faces, min_faces=min_faces)
@@ -1255,7 +1276,7 @@ class Mesh(Representation, SmurfBase):
 
     def to_convex_hull(self):
         self.load_mesh()
-        if isinstance(self.mesh_object, trimesh.Trimesh) or isinstance(self.mesh_object, trimesh.Scene):
+        if _is_trimesh_or_scene(self.mesh_object):
             self._mesh_object = self.mesh_object.convex_hull
             self._mesh_information = mesh_io.trimesh_2_mesh_info_dict(self.mesh_object)
             self._operations.append("to_convex_hull")
@@ -1286,7 +1307,7 @@ class Mesh(Representation, SmurfBase):
             raise AssertionError
         if name_replacements is None:
             name_replacements = {}
-        if isinstance(self.mesh_object, trimesh.Trimesh) or isinstance(self.mesh_object, trimesh.Scene):
+        if _is_trimesh_or_scene(self.mesh_object):
             self._mesh_object = self.mesh_object.apply_transform(mirror_transform)
             self._operations.append({"mirror": [mirror_transform]})
             try:
@@ -1318,7 +1339,7 @@ class Mesh(Representation, SmurfBase):
 
     def to_trimesh_mesh(self):
         self.load_mesh()
-        if not isinstance(self.mesh_object, trimesh.Trimesh):
+        if not _is_trimesh(self.mesh_object):
             self._changed = True
             self._info_in_sync = False
             self.history.append(f"converted from {type(self.mesh_object)} to trimesh")
@@ -1329,7 +1350,7 @@ class Mesh(Representation, SmurfBase):
         self.load_mesh()
         if transform is None or np.all(np.array(transform) == np.identity(4)):
             return
-        if isinstance(self.mesh_object, trimesh.Trimesh) or isinstance(self.mesh_object, trimesh.Scene):
+        if _is_trimesh_or_scene(self.mesh_object):
             self._mesh_object = self.mesh_object.apply_transform(transform)
             self._operations.append({"transform": [transform]})
             try:

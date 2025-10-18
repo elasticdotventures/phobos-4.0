@@ -128,7 +128,9 @@ def updateDefs(defsFolderPath):
     Returns:
 
     """
-    assert os.path.isdir(defsFolderPath)
+    if not os.path.isdir(defsFolderPath):
+        print(f"Warning: Definitions folder not found: {defsFolderPath}")
+        return
     dicts = __parseAllYAML(defsFolderPath)
     for diction in dicts:
         for category in diction:

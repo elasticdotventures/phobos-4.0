@@ -14,3 +14,6 @@ doc/_build
 tests/api/test_data/.temp**
 *.zip
 *.code-workspace
+.venv/
+.uv-cache/
+dist/

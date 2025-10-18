@@ -18,26 +18,12 @@ website = "https://github.com/elasticdotventures/phobos-4.0"
 issue_tracker = "https://github.com/elasticdotventures/phobos-4.0/issues"
 documentation = "https://github.com/elasticdotventures/phobos-4.0#readme"
 
-[assets]
-packages = ["phobos"]
-resources = [
-  "phobos/data",
-  "phobos/templates_py",
-  "phobos/models"
-]
-
-[build]
-source = "phobos"
-build = "build"
-dist = "dist"
-paths = [
-  "blender_manifest.toml",
-  "README.md",
-  "LICENSE",
-  "bl_ext/UserRepository/elasticdotventures_phobos_4/__init__.py"
-]
-paths_exclude_pattern = [
-  "__pycache__",
-  "*.pyc",
-  "*.pyo"
+# Python dependencies bundled as wheels
+wheels = [
+  "./wheels/numpy-2.3.4-cp311-cp311-win_amd64.whl",
+  "./wheels/scipy-1.16.2-cp311-cp311-win_amd64.whl",
+  "./wheels/pyyaml-6.0.3-cp311-cp311-win_amd64.whl",
+  "./wheels/pycollada-0.9.2-py3-none-any.whl",
+  "./wheels/pydot-4.0.1-py3-none-any.whl",
+  "./wheels/pyparsing-3.2.5-py3-none-any.whl",
 ]

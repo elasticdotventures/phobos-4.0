@@ -4,7 +4,13 @@
 from copy import deepcopy
 
 import numpy as np
-import trimesh
+
+# Lazy import trimesh - it's an optional dependency
+trimesh = None
+try:
+    import trimesh
+except ImportError:
+    pass  # trimesh is optional
 
 from ..commandline_logging import get_logger
 from ..defs import BPY_AVAILABLE

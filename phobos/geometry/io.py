@@ -7,7 +7,13 @@ import struct
 from copy import deepcopy
 
 import numpy as np
-import trimesh
+
+# Lazy import trimesh - it's an optional dependency
+trimesh = None
+try:
+    import trimesh
+except ImportError:
+    pass  # trimesh is optional
 
 from .geometry import identical
 from ..commandline_logging import get_logger

@@ -89,7 +89,11 @@ def log(message, level="INFO", prefix="", guionly=False, logfile=True, end='\n')
     )
 
     # display only messages up to preferred log level
-    if 'phobos' in bpy.context.preferences.addons:
+    # Check for both extension and legacy addon names
+    extension_name = "bl_ext.UserRepository.elasticdotventures_phobos_4"
+    if extension_name in bpy.context.preferences.addons:
+        prefs = bpy.context.preferences.addons[extension_name].preferences
+    elif 'phobos' in bpy.context.preferences.addons:
         prefs = bpy.context.preferences.addons["phobos"].preferences
     else:
         prefs = None

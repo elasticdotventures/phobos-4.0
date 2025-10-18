@@ -1,6 +1,12 @@
 import numpy
-import trimesh
-import trimesh.graph
+
+# Lazy import trimesh - it's an optional dependency
+trimesh = None
+try:
+    import trimesh
+    import trimesh.graph
+except ImportError:
+    pass  # trimesh is optional
 
 from phobos.utils.transform import angle_between_vectors
 
@@ -120,7 +126,7 @@ def calculateMeshInertia(mass, data, scale=None):
     faces = None
     triangle_normals = None
 
-    if not isinstance(data, trimesh.Trimesh):
+    if trimesh is None or not isinstance(data, trimesh.Trimesh):
         try:
             import bpy
             vertices = numpy.asarray([numpy.asarray(scale * v.co) for v in data.vertices])
@@ -153,8 +159,12 @@ def calculateMeshInertia(mass, data, scale=None):
     triangles = []
     for face in faces:
         if len(face) == 4:
-            tris = trimesh.geometry.triangulate_quads(quads)
-            triangles += tris
+            if trimesh is not None:
+                tris = trimesh.geometry.triangulate_quads(quads)
+                triangles += tris
+            else:
+                # Fallback: split quad into two triangles
+                triangles += [[face[0], face[1], face[2]], [face[0], face[2], face[3]]]
         else:
             triangles += [face]
 

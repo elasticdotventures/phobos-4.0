@@ -38,6 +38,16 @@ from ..commandline_logging import setup_logger_level
 from ..utils.resources import get_blender_resources_path
 
 
+def get_addon_name():
+    """Get the correct addon name for both legacy addon and Blender 4.x extension."""
+    # Try extension name first (Blender 4.x)
+    extension_name = "bl_ext.UserRepository.elasticdotventures_phobos_4"
+    if extension_name in bpy.context.preferences.addons:
+        return extension_name
+    # Fallback to legacy addon name (Blender 3.x)
+    return "phobos"
+
+
 class ModelPoseProp(bpy.types.PropertyGroup):
     """TODO Missing documentation"""
 
@@ -76,7 +86,9 @@ class PhobosPrefs(AddonPreferences):
 
     """
 
-    bl_idname = "phobos"
+    # For Blender 4.x extensions, use the full extension ID
+    # For legacy addons, use "phobos"
+    bl_idname = "bl_ext.UserRepository.elasticdotventures_phobos_4"
 
     modelsfolder: StringProperty(name="modelsfolder", subtype="DIR_PATH",
                                  default=os.path.expanduser(os.path.join("~", "phobos-models")))
@@ -226,7 +238,7 @@ class PhobosExportSettings(bpy.types.PropertyGroup):
             bpy.context.scene.phobosexportsettings.path = "//"
         elif (not bpy.data.filepath and bpy.context.scene.phobosexportsettings.path.startswith("//")) or\
                 bpy.context.scene.phobosexportsettings.path == "":
-            bpy.context.scene.phobosexportsettings.path = bpy.context.preferences.addons["phobos"].preferences.modelsfolder
+            bpy.context.scene.phobosexportsettings.path = bpy.context.preferences.addons[get_addon_name()].preferences.modelsfolder
 
     def getXMLTypeListForEnumProp(self, context):
         """
@@ -254,12 +266,19 @@ class PhobosExportSettings(bpy.types.PropertyGroup):
         # DOCU missing description
         return [(mt,) * 3 for mt in phobos_defs.MESH_TYPES]
 
+    def _get_default_path(self):
+        """Get default export path, handling both extension and legacy addon."""
+        try:
+            addon_name = get_addon_name()
+            prefs = bpy.context.preferences.addons[addon_name].preferences
+            return prefs.modelsfolder if prefs else ""
+        except:
+            return ""
+
     path : StringProperty(
         name='path',
         subtype='DIR_PATH',
-        default=(""
-                 if bpy.context.preferences.addons["phobos"].preferences is None
-                 else bpy.context.preferences.addons["phobos"].preferences.modelsfolder),
+        default="",
         update=updateExportPath
     )
 
@@ -1910,12 +1929,22 @@ def register():
     pcoll = bpy.utils.previews.new()
 
     # load a preview thumbnail of a file and store in the previews collection
-    pcoll.load("phobosIcon", get_blender_resources_path("images", "phobosIcon.png"), 'IMAGE')
+    try:
+        icon_path = get_blender_resources_path("images", "phobosIcon.png")
+        pcoll.load("phobosIcon", icon_path, 'IMAGE')
+    except Exception as e:
+        print(f"Warning: Could not load Phobos icon from {icon_path if 'icon_path' in locals() else 'unknown path'}: {e}")
+        print("  Phobos will work but without the custom icon.")
+
     prev_collections["phobos"] = pcoll
 
     global phobosIcon
     pcoll = prev_collections["phobos"]
-    phobosIcon = pcoll["phobosIcon"].icon_id
+    # Only set icon_id if the icon was loaded successfully
+    if "phobosIcon" in pcoll:
+        phobosIcon = pcoll["phobosIcon"].icon_id
+    else:
+        phobosIcon = 0  # Use default/no icon
 
     # OPT: Icons for phobostypes will be added here
     global phobostypeIcons

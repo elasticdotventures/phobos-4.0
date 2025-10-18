@@ -40,9 +40,21 @@ def getConfigPath():
     Returns:
 
     """
+    # For Blender 4.x extensions, the data is bundled within the extension directory
+    # The phobos package is at: bl_ext/UserRepository/<extension_id>/phobos/
+    # So we need to find where this module is located and use that as the base
+    import os
+    phobos_module_path = path.dirname(path.dirname(path.abspath(__file__)))
     configpath = path.normpath(
-        path.join(bpy.utils.user_resource(resource_type='SCRIPTS', path="addons"), "phobos", "data", "blender")
+        path.join(phobos_module_path, "data", "blender")
     )
+
+    # Fallback to old addon path if the extension path doesn't exist
+    if not path.exists(configpath):
+        configpath = path.normpath(
+            path.join(bpy.utils.user_resource(resource_type='SCRIPTS', path="addons"), "phobos", "data", "blender")
+        )
+
     return configpath
 
 
