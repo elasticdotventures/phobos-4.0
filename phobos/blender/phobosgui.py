@@ -1685,6 +1685,44 @@ def get_operator_manuals():
     return url_manual_prefix, url_manual_ops
 
 
+class PhobosScenePropertiesPanel(bpy.types.Panel):
+    """Phobos scene properties panel in the Scene Properties tab"""
+
+    bl_idname = "SCENE_PT_PHOBOS"
+    bl_label = "Phobos"
+    bl_space_type = "PROPERTIES"
+    bl_region_type = "WINDOW"
+    bl_context = "scene"
+
+    def draw_header(self, context):
+        self.layout.label(icon_value=phobosIcon)
+
+    def draw(self, context):
+        layout = self.layout
+        scene = context.scene
+
+        # Export Settings
+        box = layout.box()
+        box.label(text="Export Settings", icon='EXPORT')
+        box.prop(scene.phobosexportsettings, "path", text="Export Path")
+        box.prop(scene.phobosexportsettings, "selectedOnly")
+        box.prop(scene.phobosexportsettings, "exportTextures")
+
+        # Quick export format toggles
+        row = box.row()
+        col1 = row.column()
+        col1.label(text="Formats:")
+        col2 = row.column()
+        col2.prop(scene, "export_entity_urdf", text="URDF")
+        col2.prop(scene, "export_entity_sdf", text="SDF")
+        col2.prop(scene, "export_entity_smurf", text="SMURF")
+
+        # Wireframe Settings
+        box = layout.box()
+        box.label(text="Display Settings", icon='SHADING_WIRE')
+        box.prop(scene.phoboswireframesettings, "links", text="Show Links as Wireframe")
+
+
 class PhobosDisplayPanel(bpy.types.Panel):
     """TODO Missing documentation"""
 
@@ -1854,6 +1892,7 @@ REGISTER_CLASSES = [
     PhobosPropertyInformationPanel,
     PhobosModelWarningsPanel,
     PhobosToolsPanel,
+    PhobosScenePropertiesPanel,
     PhobosDisplayPanel,
     PhobosModelPanel,
 #    PhobosSubmodelsPanel,
