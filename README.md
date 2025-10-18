@@ -1,17 +1,36 @@
-[![latest-release](https://img.shields.io/github/tag/dfki-ric/phobos.svg?label=version&style=flat)](https://github.com/dfki-ric/phobos/releases)
-[![DOI](https://joss.theoj.org/papers/10.21105/joss.01326/status.svg)](https://doi.org/10.21105/joss.01326)
 [![license](https://img.shields.io/github/license/dfki-ric/phobos.svg?style=flat)](https://github.com/dfki-ric/phobos/blob/master/COPYING)
 [![made-with-sphinx-doc](https://img.shields.io/badge/Made%20with-Sphinx-1f425f.svg)](https://www.sphinx-doc.org/)
-[![API-Docs](https://github.com/dfki-ric/phobos/actions/workflows/gh-pages.yml/badge.svg)](http://dfki-ric.github.io/phobos)
 
 ![Phobos](https://github.com/dfki-ric/phobos/wiki/img/phobos_logo_small.png)
 
-Phobos 4 is both a CLI tool and add-on for the open-source 3D modeling software
-[Blender 4.2+](https://www.blender.org/download/) to support your robot model creation and editing.  
-This fork is maintained by Elastic Ventures and targets Blender 4.5/5.0 (wheel-enabled extension workflow).  
-Older Phobos releases remain available upstream but do not ship official support beyond Blender 3.3.
+# Phobos 4.x - Blender 4.2+ / 5.0 Compatible Fork
 
-The package is published on PyPI as `phobos_4` to distinguish it from historical `phobos` releases while keeping the in-Blender module/import path (`phobos`) intact.
+> **🔧 Actively Maintained Fork** | **🎯 Target: Blender 4.2 LTS → 5.0+**
+
+This is a community-maintained fork of [Phobos](https://github.com/dfki-ric/phobos) focused on **Blender 4.2+ and 5.0 compatibility**. The original DFKI-RIC repository appears to be largely unmaintained, with official support ending at Blender 3.3.
+
+## Why This Fork?
+
+**Original Phobos Status:**
+- ❌ Last maintained for Blender 3.3
+- ❌ Not compatible with Blender 4.x extension system
+- ❌ Missing wheel-based packaging for modern Blender
+- ❌ No active maintenance or issue resolution
+
+**This Fork (Phobos 4.x):**
+- ✅ **Full Blender 4.2 LTS compatibility**
+- ✅ **Blender 5.0 beta support** (tested and working)
+- ✅ **Modern extension system** with wheel-based dependencies
+- ✅ **Auto-install dependencies** (numpy, scipy, pyyaml, etc.)
+- ✅ **Active development** and issue resolution
+- ✅ **Backward compatibility** with Blender 3.x workflow (legacy zip install)
+
+## About Phobos
+
+Phobos is both a CLI tool and add-on for the open-source 3D modeling software
+[Blender](https://www.blender.org/download/) that enables WYSIWYG creation and editing of robot models for frameworks like [ROS](http://wiki.ros.org/), [ROCK](https://github.com/rock-core), and simulators like [MARS](https://github.com/rock-simulation/mars) or [Gazebo](http://gazebosim.org/).
+
+**Export Formats:** URDF, SDF, SMURF, STL, OBJ, Collada (DAE)
 
 The Blender add-on enables the creation of WYSIWYG robot
 models for use in robot frameworks like [ROS](http://wiki.ros.org/) and
@@ -28,12 +47,36 @@ Bremen, together with the [Robotics
 Group](http://www.informatik.uni-bremen.de/robotik/index_en.php) of the
 [University of Bremen](http://www.uni-bremen.de/en.html).
 
-Please contact [Henning Wiedemann](https://robotik.dfki-bremen.de/de/ueber-uns/mitarbeiter/hewi04.html)
-for any inquiries, or any questions and feedback not suited for the issues
-page.
+**Original Phobos Development:**
+Phobos was initiated and is currently developed at the [Robotics Innovation Center](http://robotik.dfki-bremen.de/en/startpage.html) of the [German Research Center for Artificial Intelligence (DFKI)](http://www.dfki.de) in Bremen.
 
-## Version 4.0.0
-Version 4.0.0 is the first Elastic Ventures release aligned with Blender’s extension schema. It introduces wheel-based packaging, the extension manifest, and compatibility shims so the add-on can be installed via the Blender 4.5 extension manager while retaining the legacy module layout.
+**This Fork:**
+For questions, issues, or contributions related to Blender 4.x/5.0 compatibility, please use this repository's [issue tracker](https://github.com/elasticdotventures/phobos-4.0/issues).
+
+## Versions & Compatibility
+
+### Version 4.0.0 (Current - This Fork)
+**First Blender 4.x/5.0 compatible release** with modern extension system support:
+
+- ✅ **Blender 4.2 LTS** - Fully tested and working
+- ✅ **Blender 4.5** - Tested and working
+- ✅ **Blender 5.0** - Beta tested and working
+- ✅ **Wheel-based packaging** with auto-install dependencies
+- ✅ **Extension manager** compatible (Blender 4.2+)
+- ✅ **Legacy zip install** supported for Blender 3.x users
+
+**Major Changes:**
+- Fixed addon preferences access for Blender 4.x extension namespace
+- Updated path resolution for extension directory structure
+- Bundled dependencies (numpy, scipy, pyyaml, pycollada, pydot, pyparsing)
+- Auto-install mechanism for wheels on first run
+- Made trimesh an optional dependency
+- Fixed operator registration errors (property naming, enum defaults)
+- Icon loading graceful fallbacks
+
+**Known Warnings (Non-Blocking):**
+- Policy violations for top-level module imports (cosmetic only)
+- sys.path modification warning (required for current architecture)
 
 ## Version 2.1.0
 Version 2.1.0 refactors especially the phobos-ci usage and improves the configurability by config inheritance. However these are breaking changes to the pipeline configuration. See PR #364 for more details on the changes.
@@ -73,33 +116,51 @@ If you are on the hunt for a BiBTeX entry, check out the [FAQ section](https://g
 
 ## Installation
 
-### Blender
->UPDATING: If you already have phobos installed and want to update.
-> You have to remove the old version of Phobos first and close Blender.
-> Then proceed with the installation steps explained below.
+### Blender 4.2+ / 5.0 (Recommended - Extension System)
 
->NOTE (WINDOWS): If you are using blender under Windows, make sure you have the latest version of [Microsoft Visual C++ Redistributable](https://learn.microsoft.com/en-US/cpp/windows/latest-supported-vc-redist?view=msvc-170) installed.  Otherwise Blender's python won't work properly.
+**For Blender 4.2 LTS, 4.5, or 5.0:**
 
-To install Phobos in blender download the phobos.zip of the release or zip the phobos subdirectory (e.g. `zip -r phobos.zip phobos`)
-Phobos has several python dependencies, those have to be installed in blender before you can use phobos.
-There are two ways of installing Phobos:
+1. **Download** the extension package:
+   - Download `elasticdotventures_phobos_4.zip` from the [releases page](https://github.com/elasticdotventures/phobos-4.0/releases)
+   - Or build from source: `python3 build_extension.py` (creates `dist/elasticdotventures_phobos_4.zip`)
 
-- Recommended:
-  1. Directly install the phobos.zip in blender: `Blender->Edit->Preferences->Addons->Install` and activate it.
-  2. Restart Blender.
-  3. Activate Phobos Add-on again.
-- (Offers inspection of the requirements before installing them) Before installing the phobos.zip you can run the script install_requirements.py with blender's python.
-  1. ```bash
-     ${BLENDER_EXECUTABLE} -b --python install_requirements.py
-     ```
-  2. Install the phobos.zip in blender: `Blender->Edit->Preferences->Addons->Install` and activate it.
+2. **Install** via Extension Manager:
+   - Open Blender 4.2+
+   - Go to `Edit → Preferences → Get Extensions`
+   - Click dropdown menu (top right) → `Install from Disk`
+   - Select `elasticdotventures_phobos_4.zip`
 
-After installation the phobos main menu can be found on the right hand side of the 3D Viewport.
-If not already visible, one can find a very small arrow to open the Blender toolbar (purple circle showing it in the image).
+3. **First Launch**:
+   - Blender will auto-install dependencies (numpy, scipy, pyyaml, etc.)
+   - **Restart Blender** when prompted (required for dependencies to load)
 
-![Small arrow to open the phobos toolbar widget.](https://github.com/dfki-ric/phobos/wiki/img/blender_phobos_menu_open.png)
+4. **Activate** (after restart):
+   - The extension should auto-enable
+   - If not, go to `Edit → Preferences → Add-ons`, search "Phobos", and enable it
 
-Phobos is currently verified against Blender 4.2 LTS and the Blender 5.0 beta builds.
+5. **Access Phobos**:
+   - Press `N` in the 3D Viewport to open the sidebar
+   - Look for the "Phobos" tab on the right side
+
+   ![Small arrow to open the phobos toolbar widget.](https://github.com/dfki-ric/phobos/wiki/img/blender_phobos_menu_open.png)
+
+**✅ Verified:** Blender 4.2 LTS, 4.5, and 5.0 beta
+
+> **UPDATING:** Remove the old version first via the Extension Manager, restart Blender, then install the new version.
+
+> **WINDOWS NOTE:** Ensure you have the latest [Microsoft Visual C++ Redistributable](https://learn.microsoft.com/en-US/cpp/windows/latest-supported-vc-redist?view=msvc-170) installed for Blender's Python to work correctly.
+
+### Blender 3.x (Legacy Zip Install)
+
+For older Blender versions (3.0 - 3.6), use the legacy zip installation method:
+
+1. Download or create `phobos.zip` (zip the `phobos/` subdirectory)
+2. Install: `Blender → Edit → Preferences → Addons → Install`
+3. Activate the Phobos addon
+4. **Restart Blender**
+5. Re-activate Phobos
+
+Note: Dependencies must be manually installed for Blender 3.x using `install_requirements.py`.
 
 ### Blender wheel extension
 
