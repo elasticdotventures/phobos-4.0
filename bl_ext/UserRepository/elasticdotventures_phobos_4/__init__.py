@@ -42,8 +42,11 @@ def install_wheels():
 # Try to import phobos using relative import (no sys.path modification needed)
 phobos = None
 try:
+    print("Phobos: Attempting to import phobos package...")
     from . import phobos
+    print("Phobos: Successfully imported phobos package")
 except ImportError as e:
+    print(f"Phobos: Import error - {type(e).__name__}: {e}")
     if "scipy" in str(e) or "numpy" in str(e) or "yaml" in str(e):
         print("Phobos: Installing required dependencies...")
         if install_wheels():
@@ -51,13 +54,23 @@ except ImportError as e:
             # Try import again after install
             try:
                 from . import phobos
-            except ImportError:
+                print("Phobos: Successfully imported after installing dependencies")
+            except ImportError as e2:
+                print(f"Phobos: Still failed after dependency install: {e2}")
                 phobos = None
         else:
             print("Phobos: Failed to install dependencies")
             phobos = None
     else:
+        print(f"Phobos: Unexpected import error, re-raising: {e}")
+        import traceback
+        traceback.print_exc()
         raise
+except Exception as e:
+    print(f"Phobos: Unexpected exception during import: {type(e).__name__}: {e}")
+    import traceback
+    traceback.print_exc()
+    raise
 
 # Expose bl_info for Blender
 bl_info = phobos.bl_info if phobos else {
@@ -72,15 +85,23 @@ bl_info = phobos.bl_info if phobos else {
 
 def register() -> None:
     """Register the Phobos addon."""
+    print("Phobos: register() called")
     global __addon_enabled__
     if phobos:
-        phobos.register()
-        __addon_enabled__ = True
+        print("Phobos: Calling phobos.register()...")
+        try:
+            phobos.register()
+            __addon_enabled__ = True
+            print("Phobos: Successfully registered!")
+        except Exception as e:
+            print(f"Phobos: Error during registration: {type(e).__name__}: {e}")
+            import traceback
+            traceback.print_exc()
+            raise
     else:
-        import bpy
-        def draw(self, context):
-            self.layout.label(text="Phobos dependencies installed. Please restart Blender to activate the addon.")
-        bpy.context.window_manager.popup_menu(draw, title="Phobos: Restart Required")
+        print("Phobos: phobos module is None - dependencies may need to be installed")
+        print("Phobos: Please restart Blender to complete activation")
+        # Note: Cannot show popup during extension loading as context is not available
 
 
 def unregister() -> None:
