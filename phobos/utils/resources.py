@@ -1,7 +1,7 @@
 import json
 import os
 from .misc import merge_default
-from ..defs import BPY_AVAILABLE
+from ..common.defs import BPY_AVAILABLE
 
 
 def get_resources_path(*filepath):

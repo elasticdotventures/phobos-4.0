@@ -3,7 +3,7 @@ from copy import deepcopy
 import numpy as np
 from scipy.spatial.transform import Rotation as Rot
 
-from ..defs import EULER_CONVENTION, RPY_CONVENTION
+from ..common.defs import EULER_CONVENTION, RPY_CONVENTION
 
 
 def matrix_to_quaternion(rotation):

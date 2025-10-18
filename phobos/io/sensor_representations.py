@@ -6,7 +6,7 @@ from .base import Representation
 from .representation import Pose
 from .smurf_reflection import SmurfBase
 from .xml_factory import singular as _singular
-from ..commandline_logging import get_logger
+from ..common.commandline_logging import get_logger
 from ..io import representation
 from ..utils import transform
 

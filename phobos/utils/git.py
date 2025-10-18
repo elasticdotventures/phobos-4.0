@@ -2,8 +2,8 @@ import os
 
 from . import misc
 from .misc import execute_shell_command
-from ..defs import load_json
-from ..commandline_logging import get_logger
+from ..common.defs import load_json
+from ..common.commandline_logging import get_logger
 
 log = get_logger(__name__)
 

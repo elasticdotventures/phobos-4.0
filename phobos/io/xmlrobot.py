@@ -7,7 +7,7 @@ import numpy as np
 from . import representation, xml_factory, sensor_representations
 from .base import Representation
 from .xml_factory import plural as _plural
-from ..commandline_logging import get_logger
+from ..common.commandline_logging import get_logger
 from ..utils.transform import create_transformation, get_adjoint, inv
 from ..utils.tree import get_joints_depth_first
 from ..utils import misc

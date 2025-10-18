@@ -3,8 +3,8 @@ from copy import deepcopy
 
 from .hyrodyn import Submechanism, Exoskeleton
 from .poses import JointPoseSet
-from ..commandline_logging import get_logger
-from ..defs import load_json
+from ..common.commandline_logging import get_logger
+from ..common.defs import load_json
 from ..io import representation
 from ..io import sensor_representations
 from ..io.parser import parse_xml

@@ -11,11 +11,11 @@ from copy import deepcopy
 import numpy as np
 import pkg_resources
 
-from ..defs import KINEMATIC_TYPES
+from ..common.defs import KINEMATIC_TYPES
 from .base import Representation, Linkable
 from ..utils.misc import to_pretty_xml_string, patch_dict, get_var, deserialize, is_int, is_float, plural, singular
 
-from ..commandline_logging import get_logger
+from ..common.commandline_logging import get_logger
 log = get_logger(__name__)
 
 XML_REFLECTIONS = {

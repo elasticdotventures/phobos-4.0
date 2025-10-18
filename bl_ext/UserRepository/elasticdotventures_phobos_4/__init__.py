@@ -13,10 +13,8 @@ from pathlib import Path
 # Required by Blender 4.x extensions
 __addon_enabled__ = False
 
-# Add the extension directory to sys.path so we can import the phobos package
+# Extension directory for finding wheels
 _extension_dir = Path(__file__).parent
-if str(_extension_dir) not in sys.path:
-    sys.path.insert(0, str(_extension_dir))
 
 
 def install_wheels():
@@ -41,10 +39,10 @@ def install_wheels():
     return installed_any
 
 
-# Try to import phobos, installing wheels if needed
+# Try to import phobos using relative import (no sys.path modification needed)
 phobos = None
 try:
-    import phobos
+    from . import phobos
 except ImportError as e:
     if "scipy" in str(e) or "numpy" in str(e) or "yaml" in str(e):
         print("Phobos: Installing required dependencies...")
@@ -52,7 +50,7 @@ except ImportError as e:
             print("Phobos: Dependencies installed, please restart Blender to activate the addon.")
             # Try import again after install
             try:
-                import phobos
+                from . import phobos
             except ImportError:
                 phobos = None
         else:

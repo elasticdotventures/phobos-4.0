@@ -14,8 +14,8 @@ except ImportError:
     QName = None
 
 from .. import geometry as pgu, utils
-from ..commandline_logging import get_logger
-from ..defs import load_json, dump_json, KINEMATIC_TYPES
+from ..common.commandline_logging import get_logger
+from ..common.defs import load_json, dump_json, KINEMATIC_TYPES
 from ..geometry import get_reflection_matrix
 from ..io import representation, sensor_representations
 from ..io.hyrodyn import Submechanism

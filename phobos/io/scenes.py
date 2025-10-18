@@ -1,7 +1,7 @@
 from .base import Representation
 from .smurf_reflection import SmurfBase
 
-from ..commandline_logging import get_logger
+from ..common.commandline_logging import get_logger
 
 log = get_logger(__name__)
 

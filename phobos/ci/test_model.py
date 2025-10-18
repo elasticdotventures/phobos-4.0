@@ -1,7 +1,7 @@
 import os
 
 from ..core import Robot
-from ..defs import load_json
+from ..common.defs import load_json
 
 
 class TestModel(object):

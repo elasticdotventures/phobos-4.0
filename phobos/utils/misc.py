@@ -9,8 +9,8 @@ from xml.etree import ElementTree as ET
 
 import numpy as np
 
-from ..defs import load_json
-from ..commandline_logging import get_logger
+from ..common.defs import load_json
+from ..common.commandline_logging import get_logger
 
 log = get_logger(__name__)
 

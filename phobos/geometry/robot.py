@@ -15,7 +15,7 @@ except ImportError:
 from . import geometry
 from . import io
 from ..io import representation
-from ..commandline_logging import get_logger
+from ..common.commandline_logging import get_logger
 
 log = get_logger(__name__)
 

@@ -15,10 +15,10 @@ INFO = 'Converts the given input robot file to SDF/URDF/PDF/THUMBNAIL/SMURF/SMUR
 def main(args):
     import argparse
     import os.path as path
-    from ..defs import load_json
+    from ..common.defs import load_json
     from ..core import Robot, World
     from ..utils import misc, resources
-    from ..commandline_logging import setup_logger_level, BASE_LOG_LEVEL
+    from ..common.commandline_logging import setup_logger_level, BASE_LOG_LEVEL
 
     parser = argparse.ArgumentParser(description=INFO, prog="phobos " + path.basename(__file__)[:-3])
     parser.add_argument('input', type=str, help='Input specification: A path to a file (with extension [smurfa, smurfs, smurf, urdf, sdf]) or directory')

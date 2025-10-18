@@ -13,7 +13,7 @@ import os
 
 import bpy
 
-from .. import defs
+from ..common import defs
 from ..phoboslog import log
 from ..utils import blender as bUtils
 from ..utils import naming as nUtils

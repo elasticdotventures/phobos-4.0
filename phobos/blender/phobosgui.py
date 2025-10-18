@@ -33,8 +33,8 @@ from .utils import naming as nUtils
 from .utils import selection as sUtils
 from .utils import validation as validation
 
-from .. import defs as phobos_defs
-from ..commandline_logging import setup_logger_level
+from ..common import defs as phobos_defs
+from ..common.commandline_logging import setup_logger_level
 from ..utils.resources import get_blender_resources_path
 
 

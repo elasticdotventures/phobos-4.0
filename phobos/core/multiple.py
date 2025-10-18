@@ -1,13 +1,13 @@
 import os
 
 from . import Robot
-from ..defs import dump_json, load_json
+from ..common.defs import dump_json, load_json
 from ..io import representation, scenes
 from ..io.base import Representation
 from ..io.smurf_reflection import SmurfBase
 from ..io.xml_factory import plural as _plural, singular as _singular
 
-from ..commandline_logging import get_logger
+from ..common.commandline_logging import get_logger
 log = get_logger(__name__)
 
 __IMPORTS__ = [x for x in dir() if not x.startswith("__")]

@@ -15,6 +15,11 @@ Handles different import attempts to cope with Blender's *Reload script* functio
 import sys
 import subprocess
 
+# Re-export common modules for backward compatibility
+# This allows 'from . import defs' to still work while the actual modules
+# are now in the 'common' subpackage to comply with Blender 4.x extension policy
+from .common import commandline_logging, defs
+
 BPY_AVAILABLE = False
 try:
     import bpy

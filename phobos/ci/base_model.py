@@ -6,9 +6,9 @@ import numpy as np
 import yaml
 import json
 
-from ..commandline_logging import get_logger
+from ..common.commandline_logging import get_logger
 from ..core import Robot
-from ..defs import load_json, dump_json, dump_yaml, KINEMATIC_TYPES
+from ..common.defs import load_json, dump_json, dump_yaml, KINEMATIC_TYPES
 from ..geometry import replace_collision, join_collisions, remove_collision, remove_visual
 from ..io import representation, sensor_representations, poses
 from ..io.hyrodyn import ConstraintAxis

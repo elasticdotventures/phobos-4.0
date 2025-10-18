@@ -24,7 +24,7 @@ from bpy.props import (
 from bpy.types import Operator, PropertyGroup
 import json
 
-from .. import defs as defs
+from ..common import defs as defs
 from ..io import phobos2blender, blender2phobos
 from ..phoboslog import log
 from ..utils import blender as bUtils

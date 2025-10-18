@@ -18,8 +18,8 @@ def main(args):
     from copy import deepcopy
     from ..core.robot import Robot
     from ..io import representation
-    from ..defs import dump_json
-    from ..commandline_logging import setup_logger_level, BASE_LOG_LEVEL
+    from ..common.defs import dump_json
+    from ..common.commandline_logging import setup_logger_level, BASE_LOG_LEVEL
 
     parser = argparse.ArgumentParser(description=INFO, prog="phobos " + path.basename(__file__)[:-3])
     parser.add_argument('robot_file', type=str, help='Path to the urdf or smurf file')

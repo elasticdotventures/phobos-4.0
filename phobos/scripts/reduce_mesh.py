@@ -15,7 +15,7 @@ def main(args):
     import argparse
     import os.path as path
     from ..geometry import io, geometry
-    from ..commandline_logging import setup_logger_level, BASE_LOG_LEVEL
+    from ..common.commandline_logging import setup_logger_level, BASE_LOG_LEVEL
 
     parser = argparse.ArgumentParser(description=INFO, prog="phobos " + path.basename(__file__)[:-3])
     parser.add_argument('input_file', type=str, help='Path to the STL file that shall be reduced')

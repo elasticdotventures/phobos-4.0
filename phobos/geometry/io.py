@@ -16,8 +16,8 @@ except ImportError:
     pass  # trimesh is optional
 
 from .geometry import identical
-from ..commandline_logging import get_logger
-from ..defs import BPY_AVAILABLE
+from ..common.commandline_logging import get_logger
+from ..common.defs import BPY_AVAILABLE
 from ..utils import misc, xml as xml_utils
 
 log = get_logger(__name__)

@@ -20,13 +20,13 @@ from .base import Representation
 from .smurf_reflection import SmurfBase
 from .xml_factory import singular as _singular, plural as _plural
 from .yaml_reflection import to_yaml
-from ..defs import BPY_AVAILABLE
+from ..common.defs import BPY_AVAILABLE
 from ..geometry import io as mesh_io
 from ..geometry.geometry import identical, reduce_mesh, get_reflection_matrix, improve_mesh, create_box
 from ..utils import misc, git, transform
 from ..utils.transform import inv
 from ..utils.xml import read_relative_filename
-from .. import defs as phobos_defs
+from ..common import defs as phobos_defs
 from ..blender.utils.blender import blenderVersionIsAtLeast
 
 MESH_INFO_KEYS = ["vertex_normals", "texture_coords", "vertices", "faces"]
@@ -45,7 +45,7 @@ if BPY_AVAILABLE:
 
     MESH_DATA_TYPES += ["bpy_types.Mesh"]
 
-from ..commandline_logging import get_logger
+from ..common.commandline_logging import get_logger
 log = get_logger(__name__)
 
 # Helper functions for trimesh type checking when trimesh might not be available

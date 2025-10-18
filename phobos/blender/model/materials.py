@@ -15,7 +15,7 @@ Contains the functions required to model a material in Blender.
 
 import bpy
 
-from .. import defs
+from ..common import defs
 from ..phoboslog import log
 
 

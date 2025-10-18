@@ -13,7 +13,7 @@ from copy import deepcopy as dc
 
 import bpy
 
-from .. import defs
+from ..common import defs
 from ..phoboslog import log
 from ..utils import naming as nUtils
 

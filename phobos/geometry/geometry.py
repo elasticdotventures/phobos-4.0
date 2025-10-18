@@ -12,8 +12,8 @@ try:
 except ImportError:
     pass  # trimesh is optional
 
-from ..commandline_logging import get_logger
-from ..defs import BPY_AVAILABLE
+from ..common.commandline_logging import get_logger
+from ..common.defs import BPY_AVAILABLE
 from ..io import representation
 from ..utils.transform import create_transformation
 

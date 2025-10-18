@@ -2,9 +2,9 @@ import os
 import subprocess
 import sys
 
-from ..commandline_logging import get_logger
+from ..common.commandline_logging import get_logger
 from ..core import Robot
-from ..defs import load_json
+from ..common.defs import load_json
 
 log = get_logger(__name__)
 

@@ -2,8 +2,8 @@ from copy import deepcopy
 import numpy as np
 import os
 
-from ..commandline_logging import get_logger
-from ..defs import *
+from ..common.commandline_logging import get_logger
+from ..common.defs import *
 from ..io import representation
 from ..io.representation import Pose
 from ..utils import xml
@@ -300,7 +300,7 @@ class ModelTest(object):
 
     def test_load_in_pybullet(self):
         protocol = ""
-        from ..defs import  check_pybullet_available
+        from ..common.defs import check_pybullet_available
         if not check_pybullet_available():
             protocol = append_string(protocol, 'Pybullet not present', loglevel="warning")
             return True, protocol

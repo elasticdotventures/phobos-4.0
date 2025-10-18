@@ -15,7 +15,7 @@ def main(args):
     import argparse
     import os
     from ..utils import git, misc, resources
-    from ..commandline_logging import setup_logger_level, BASE_LOG_LEVEL
+    from ..common.commandline_logging import setup_logger_level, BASE_LOG_LEVEL
 
     parser = argparse.ArgumentParser(description=INFO, prog="phobos " + os.path.basename(__file__)[:-3])
     parser.add_argument('directory', type=str, help='Path to model directory')
