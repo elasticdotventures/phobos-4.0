@@ -23,15 +23,15 @@ except ImportError:
     pass
 
 # Phobos information
-version = '2.1.0 "Perilled Pangolin"'
+version = '4.0.0 "Perilled Pangolin"'
 repository = 'https://github.com/dfki-ric/phobos'
 
 bl_info = {
-    "name": "Phobos",
+    "name": "Phobos 4",
     "description": "A toolbox to enable editing of robot models in Blender.",
     "author": "Kai von Szadkowski, Henning Wiedemann, Malte Langosz, Simon Reichel, Julius Martensen, et. al.",
-    "version": (2, 0, 0),
-    "blender": (3, 3),
+    "version": (4, 0, 0),
+    "blender": (4, 2, 0),
     "location": "Phobos adds a custom tool panel.",
     "warning": "",
     "wiki_url": "https://github.com/dfki-ric/phobos/wiki",
@@ -251,12 +251,16 @@ if BPY_AVAILABLE:
         from . import utils
         from . import ci
         from . import scripts
-        check_requirements(optional=True, upgrade_pip=False, extra=False, install=False)
+        check_requirements(optional=False, upgrade_pip=False, extra=False, install=False)
     except ImportError as e:
-        # this is the first installation in blender so we check the requirements
-        check_requirements(optional=True, upgrade_pip=True, extra=False, install=True)
-
-        print('\033[92m'+'\033[1m'+"Phobos:"+ installation_finished_message+'\033[0m')
+        missing_req = str(e).replace("Uninstalled requirement:", "").strip()
+        message = (
+            f"Missing required Python package for Phobos: {missing_req}.\n"
+            "Install dependencies by running Blender's Python with "
+            "`install_requirements.py` or pip-install them into the shared scripts/modules directory."
+        )
+        print(message)
+        raise ImportError(message) from e
 else:
         from . import defs
         from . import io

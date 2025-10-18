@@ -6,8 +6,12 @@
 
 ![Phobos](https://github.com/dfki-ric/phobos/wiki/img/phobos_logo_small.png)
 
-Phobos is both a CLI tool and add-on for the open-source 3D modeling software
-[Blender 5.x](https://www.blender.org/download/) to support your robot model creation and editing.
+Phobos 4 is both a CLI tool and add-on for the open-source 3D modeling software
+[Blender 4.2+](https://www.blender.org/download/) to support your robot model creation and editing.  
+This fork is maintained by Elastic Ventures and targets Blender 4.5/5.0 (wheel-enabled extension workflow).  
+Older Phobos releases remain available upstream but do not ship official support beyond Blender 3.3.
+
+The package is published on PyPI as `phobos_4` to distinguish it from historical `phobos` releases while keeping the in-Blender module/import path (`phobos`) intact.
 
 The Blender add-on enables the creation of WYSIWYG robot
 models for use in robot frameworks like [ROS](http://wiki.ros.org/) and
@@ -27,6 +31,9 @@ Group](http://www.informatik.uni-bremen.de/robotik/index_en.php) of the
 Please contact [Henning Wiedemann](https://robotik.dfki-bremen.de/de/ueber-uns/mitarbeiter/hewi04.html)
 for any inquiries, or any questions and feedback not suited for the issues
 page.
+
+## Version 4.0.0
+Version 4.0.0 is the first Elastic Ventures release aligned with Blender’s extension schema. It introduces wheel-based packaging, the extension manifest, and compatibility shims so the add-on can be installed via the Blender 4.5 extension manager while retaining the legacy module layout.
 
 ## Version 2.1.0
 Version 2.1.0 refactors especially the phobos-ci usage and improves the configurability by config inheritance. However these are breaking changes to the pipeline configuration. See PR #364 for more details on the changes.
@@ -93,6 +100,41 @@ If not already visible, one can find a very small arrow to open the Blender tool
 ![Small arrow to open the phobos toolbar widget.](https://github.com/dfki-ric/phobos/wiki/img/blender_phobos_menu_open.png)
 
 Phobos is currently verified against Blender 4.2 LTS and the Blender 5.0 beta builds.
+
+### Blender wheel extension
+
+Blender 4.2+ provides an extension manager that can install add-ons directly from Python wheels.  
+Phobos now ships a wheel layout defined in `pyproject.toml` and `blender_manifest.toml`.
+
+To produce a wheel from a clean checkout:
+
+```bash
+python -m pip install --upgrade build
+python -m build --wheel
+```
+
+Install the resulting `dist/phobos_4-*.whl` through **Edit ▸ Preferences ▸ Extensions ▸ Install from Disk…** and restart Blender.
+Dependencies declared in the wheel are resolved by Blender’s bundled Python runtime, so the legacy `install_requirements.py` flow is no longer required on Blender 5.x.
+After Blender restarts, open **Edit ▸ Preferences ▸ Add-ons**, search for “Phobos”, enable the add-on, and press `N` in the 3D Viewport to access the Phobos sidebar tab.
+
+### Blender extension builder
+
+The repository also ships packaging shortcuts for the official [blender-extension-builder](https://pypi.org/project/blender-extension-builder/) workflow.
+
+Use the following steps to produce a Blender-ready archive:
+
+```bash
+# install tooling (uv sync --extra dev also works)
+uv tool install blender-extension-builder
+
+# point to the Blender binary if it is not on PATH
+export BLENDER_PATH=/Applications/Blender.app/Contents/MacOS/Blender
+
+# assemble the extension archive under dist/
+just build-extension
+```
+
+The command calls `build-blender-extension` with `blender_manifest.toml` so the output complies with the schema documented at <https://developer.blender.org/docs/features/extensions/schema/>. If Blender is unavailable locally, fall back to `just zip-addon`, which recreates the legacy zip bundle.
 
 ### CLI
 Install the requirements by executing `install_requirements.py` with the python you want to install phobos to:

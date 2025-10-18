@@ -1,0 +1,43 @@
+schema_version = "1.0.0"
+
+id = "elasticdotventures_phobos_4"
+version = "4.0.0"
+type = "add-on"
+name = "Phobos 4"
+tagline = "Robot modeling toolkit for Blender"
+license = ["BSD-3-Clause"]
+tags = ["Rigging", "Import-Export", "Robotics"]
+blender_version_min = "4.2.0"
+maintainer = "Elastic Ventures <brianh@elastic.ventures>"
+
+[[maintainers]]
+name = "Elastic Ventures"
+email = "brianh@elastic.ventures"
+
+website = "https://github.com/elasticdotventures/phobos-4.0"
+issue_tracker = "https://github.com/elasticdotventures/phobos-4.0/issues"
+documentation = "https://github.com/elasticdotventures/phobos-4.0#readme"
+
+[assets]
+packages = ["phobos"]
+resources = [
+  "phobos/data",
+  "phobos/templates_py",
+  "phobos/models"
+]
+
+[build]
+source = "phobos"
+build = "build"
+dist = "dist"
+paths = [
+  "blender_manifest.toml",
+  "README.md",
+  "LICENSE",
+  "bl_ext/UserRepository/elasticdotventures_phobos_4/__init__.py"
+]
+paths_exclude_pattern = [
+  "__pycache__",
+  "*.pyc",
+  "*.pyo"
+]
