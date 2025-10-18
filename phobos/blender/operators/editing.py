@@ -1061,7 +1061,7 @@ class GenerateInertialObjectsOperator(Operator):
         description="Clear existing inertial objects of selected links.",
     )
 
-    _toggling : BoolProperty(
+    toggling_internal : BoolProperty(
         name="Ensure no infinite recursion when toggling visuals and collisions",
         default=False,
         description="Used internally to avoid infinite recursion when toggling visuals/collisions",
@@ -1069,18 +1069,18 @@ class GenerateInertialObjectsOperator(Operator):
     )
 
     def toggleVisual(self, context):
-        if self._toggling:
+        if self.toggling_internal:
             return
-        self._toggling = True
+        self.toggling_internal = True
         self.collisions = not bool(self.visuals)
-        self._toggling = False
+        self.toggling_internal = False
 
     def toggleCollision(self, context):
-        if self._toggling:
+        if self.toggling_internal:
             return
-        self._toggling = True
+        self.toggling_internal = True
         self.visuals = not bool(self.collisions)
-        self._toggling = False
+        self.toggling_internal = False
 
     visuals : BoolProperty(
         name="visual",
@@ -3237,10 +3237,13 @@ class DefineSubmodel(Operator):
         name="Version name", description="Name of the submodel version", default='1.0'
     )
 
+    def get_submodeltype_items(self, context):
+        """Get submodel type items dynamically"""
+        return tuple([(sub,) * 3 for sub in defs.definitions.get('submodeltypes', [])])
+
     submodeltype : EnumProperty(
-        items=tuple([(sub,) * 3 for sub in defs.definitions['submodeltypes']]),
+        items=get_submodeltype_items,
         name="Submodel type",
-        default="mechanism",
         description="The type for the new submodel",
     )
 
