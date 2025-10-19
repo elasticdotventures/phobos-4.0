@@ -3672,7 +3672,11 @@ class SetModelRoot(Operator):
         Returns:
 
         """
-        return context.active_object and context.active_object.phobostype == 'link'
+        return (context and
+                hasattr(context, 'active_object') and
+                context.active_object is not None and
+                hasattr(context.active_object, 'phobostype') and
+                context.active_object.phobostype == 'link')
 
     def execute(self, context):
         """
