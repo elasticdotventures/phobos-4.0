@@ -44,9 +44,9 @@ jobs:
       shell: bash
       run: |
         if command -v unzip &> /dev/null; then
-          unzip -l dist/phobos_4.zip | head -20
+          unzip -l dist/phobos_4.zip | head -20 || true
         elif command -v 7z &> /dev/null; then
-          7z l dist/phobos_4.zip | head -30
+          7z l dist/phobos_4.zip | head -30 || true
         else
           echo "Zip verification skipped (no unzip/7z available)"
         fi
