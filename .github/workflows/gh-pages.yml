@@ -1,7 +1,7 @@
 name: API-Docs
 on:
   push:
-    branches: [master] # branch to trigger deployment
+    branches: [main] # branch to trigger deployment
 
 jobs:
   pages:
