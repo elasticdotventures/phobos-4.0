@@ -62,8 +62,35 @@ def getBlenderVersion():
     return bpy.app.version[0] * 100 + bpy.app.version[1]
 
 
+def blenderVersionIsAtLeast(required_version: tuple) -> bool:
+    """
+    Check if the current Blender version is greater than or equal to the required version.
+    """
+    current_version = bpy.app.version
+
+    for blender_v, required_v in zip(current_version, required_version):
+        if blender_v > required_v:
+            log(f"Current version {current_version} > {required_version}", "DEBUG")
+            return True
+        if blender_v < required_v:
+            log(f"Current version {current_version} < {required_version}", "DEBUG")
+            return False
+
+    if len(current_version) >= len(required_version):
+        log(f"Current version {current_version} >= {required_version}", "DEBUG")
+        return True
+
+    log(f"Could not parse version provided to blenderVersionIsAtLeast: {required_version}", "ERROR")
+    return False
+
+
 def getPhobosPreferences():
-    """TODO Missing documentation"""
+    """Get Phobos addon preferences, handling both extension and legacy addon."""
+    # Try extension name first (Blender 4.x)
+    extension_name = "bl_ext.UserRepository.elasticdotventures_phobos_4"
+    if extension_name in bpy.context.preferences.addons:
+        return bpy.context.preferences.addons[extension_name].preferences
+    # Fallback to legacy addon name (Blender 3.x)
     return bpy.context.preferences.addons["phobos"].preferences
 
 

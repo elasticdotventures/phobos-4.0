@@ -6,7 +6,7 @@ from .base import Representation
 from .representation import Pose
 from .smurf_reflection import SmurfBase
 from .xml_factory import singular as _singular
-from ..commandline_logging import get_logger
+from ..common.commandline_logging import get_logger
 from ..io import representation
 from ..utils import transform
 
@@ -125,7 +125,7 @@ class Joint6DOF(Sensor):
         self.returns += ['link']
 
 
-# [TODO v2.0.0] Check kwargs, internal computation and usage in mars
+# [TODO v2.2.0] Check kwargs, internal computation and usage in mars
 class RotatingRaySensor(Sensor):
     _class_variables = ["name", "link", "bands", "draw_rays", "horizontal_offset", "horizontal_resolution",
                         "opening_width", "lasers", "max_distance", "min_distance", "opening_height", "vertical_offset"]

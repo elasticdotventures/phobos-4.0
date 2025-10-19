@@ -7,11 +7,17 @@ import struct
 from copy import deepcopy
 
 import numpy as np
-import trimesh
+
+# Lazy import trimesh - it's an optional dependency
+trimesh = None
+try:
+    import trimesh
+except ImportError:
+    pass  # trimesh is optional
 
 from .geometry import identical
-from ..commandline_logging import get_logger
-from ..defs import BPY_AVAILABLE
+from ..common.commandline_logging import get_logger
+from ..common.defs import BPY_AVAILABLE
 from ..utils import misc, xml as xml_utils
 
 log = get_logger(__name__)
@@ -46,7 +52,7 @@ def as_trimesh(scene_or_mesh, scale=None, silent=False):
         vertices = np.asarray([np.asarray(scale * v.co) for v in blender_mesh.vertices])
         faces = np.array([[v for v in p.vertices] for p in blender_mesh.polygons], dtype=np.int64)
         if not silent:
-            # [TODO v2.0.0] Resolve the following error
+            # [TODO v2.2.0] Resolve the following error
             log.error("Received a blender mesh, porting uv maps to trimesh representation are not yet supported and thus will be lost.")
         mesh = trimesh.Trimesh(vertices=vertices, faces=trimesh.geometry.triangulate_quads(faces))
     else:
@@ -69,7 +75,6 @@ def blender_2_mesh_info_dict(mesh):
         import bpy
     assert isinstance(mesh, bpy.types.Mesh)
     mesh.calc_loop_triangles()
-    mesh.calc_normals()
 
     uv_layer = mesh.uv_layers.active
     write_uv = uv_layer is not None and len(uv_layer.data) > 0

@@ -1,7 +1,7 @@
 from .base import Representation
 from .smurf_reflection import SmurfBase
 
-from ..commandline_logging import get_logger
+from ..common.commandline_logging import get_logger
 
 log = get_logger(__name__)
 
@@ -42,17 +42,6 @@ class Physics(Representation, SmurfBase):
         assert ode is None or type(ode) == ODE
         assert gravity is None or type(gravity) == Gravity
         super(Physics, self).__init__(ode=ode, gravity=gravity)
-
-
-class Frame(Representation):
-    _class_variables = ["name", "attached_to", "origin"]
-    _type_dict = {"attached_to": "frames"}
-
-    def __init__(self, name=None, attached_to=None, origin=None):
-        super(Frame, self).__init__()
-        self.name = name
-        self.attached_to = attached_to
-        self.origin = origin
 
 
 # [TODO v2.1.0] Add SDF-/MARS-Scene support

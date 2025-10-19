@@ -3,7 +3,7 @@ import numpy
 from .representation import ConstraintAxis
 from .smurf_reflection import SmurfBase
 from .xml_factory import plural as _plural
-from ..commandline_logging import get_logger
+from ..common.commandline_logging import get_logger
 from ..utils import tree
 from ..utils.transform import matrix_to_quaternion
 

@@ -1,0 +1,75 @@
+[build-system]
+requires = ["setuptools>=67", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "phobos_4"
+version = "4.0.0"
+description = "Phobos is a python tool for processing simulation models with a Blender add-on for robot modeling."
+readme = "README.md"
+license = "BSD-3-Clause"
+requires-python = ">=3.10"
+authors = [
+  { name = "DFKI Robotics Innovation Center" },
+  { name = "Elastic Ventures" }
+]
+maintainers = [
+  { name = "Elastic Ventures", email = "brianh@elastic.ventures" }
+]
+keywords = ["robotics", "blender", "addon", "urdf", "robot", "simulation"]
+dependencies = [
+  "pyyaml",
+  "numpy",
+  "scipy",
+  "pycollada",
+  "pydot",
+  "setuptools"
+]
+classifiers = [
+  "Development Status :: 4 - Beta",
+  "Intended Audience :: Developers",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
+  "Topic :: Multimedia :: Graphics :: 3D Modeling"
+]
+
+[project.optional-dependencies]
+optional = ["networkx", "trimesh", "Pillow", "lxml"]
+extra = ["pybullet", "open3d", "python-fcl"]
+dev = ["build", "blender-extension-builder"]
+
+[project.entry-points."console_scripts"]
+phobos = "phobos.scripts.phobos:main"
+
+[project.urls]
+Homepage = "https://github.com/elasticdotventures/phobos-4.0"
+Documentation = "https://github.com/elasticdotventures/phobos-4.0#readme"
+Repository = "https://github.com/elasticdotventures/phobos-4.0.git"
+Issues = "https://github.com/elasticdotventures/phobos-4.0/issues"
+
+[tool.setuptools.packages.find]
+include = ["phobos*", "bl_ext*"]
+
+[tool.setuptools.package-data]
+phobos = [
+  "data/**/*",
+  "templates_py/**/*",
+  "models/**/*",
+  "docs/**/*",
+  "ci/**/*"
+]
+
+[tool.setuptools.data-files]
+"" = ["LICENSE", "blender_manifest.toml"]
+
+[tool.blender_extension]
+module = "phobos"
+blender_version_min = "4.2.0"
+channels = ["stable"]
+tags = ["Rigging", "Import-Export", "Robotics"]
+maintainers = ["Elastic Ventures <brianh@elastic.ventures>"]
+license = ["BSD-3-Clause"]
+homepage = "https://github.com/elasticdotventures/phobos-4.0"
+tracker = "https://github.com/elasticdotventures/phobos-4.0/issues"
+description = "Robot modeling toolkit for Blender with URDF/SMURF pipelines."

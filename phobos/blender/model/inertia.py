@@ -201,7 +201,35 @@ def combine_com_3x3(objects):
     for obj in objects:
         combined_com = combined_com + obj.matrix_local.translation * obj['mass']
         combined_mass += obj['mass']
-    combined_com = combined_com / combined_mass
+    if combined_mass != 0:
+        combined_com = combined_com / combined_mass
+    else:
+        combined_com = mathutils.Vector((0.0,) * 3)
+        combined_volume = 0
+        for obj in objects:
+            # calculate volume
+            mesh = representation.Mesh(
+                mesh=obj.data.copy(),
+                meshname=obj.data.name
+            )
+            volume, _ = mesh.approx_volume_and_com()
+            center = obj.matrix_local.translation
+
+            combined_volume += volume
+            combined_com = combined_com + center * volume
+        combined_com = combined_com / combined_volume
+
+        if len(objects) > 1:
+            all_objects = ""
+            for i in range(len(objects)):
+                obj = objects[i]
+                if i == 0:
+                    all_objects += obj.name
+                elif i == len(objects)-1:
+                    all_objects += " and "+obj.name
+                else:
+                    all_objects += ", "+obj.name
+            log(message=f"Mass of {all_objects} totals 0. Weighing by volume", level='INFO')
     log("  Combined center of mass: " + str(combined_com), 'DEBUG')
     return combined_mass, combined_com
 

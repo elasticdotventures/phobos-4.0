@@ -12,7 +12,7 @@
 import bpy
 import mathutils
 
-from .. import defs
+from ...common import defs
 from ..model import models as models
 from ..phoboslog import log
 from ..utils import blender as bUtils

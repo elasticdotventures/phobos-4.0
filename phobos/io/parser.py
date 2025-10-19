@@ -2,7 +2,7 @@ import os
 from xml.etree import ElementTree as ET
 
 from .xmlrobot import XMLRobot
-from ..commandline_logging import get_logger
+from ..common.commandline_logging import get_logger
 
 log = get_logger(__name__)
 

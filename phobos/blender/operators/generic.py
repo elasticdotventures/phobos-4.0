@@ -24,7 +24,8 @@ from bpy.props import (
 from bpy.types import Operator, PropertyGroup
 import json
 
-from .. import defs as defs
+from ...common import defs as common_defs
+from .. import defs
 from ..io import phobos2blender, blender2phobos
 from ..phoboslog import log
 from ..utils import blender as bUtils
@@ -309,7 +310,6 @@ class DynamicProperty(PropertyGroup):
         else:
             row = layout
 
-        self.deleteOption = True
         if self.deleteOption:
             line = layout.split(factor=0.9)
             row = line.row()
@@ -771,6 +771,7 @@ class AnnotationsOperator(bpy.types.Operator):
             if newName and self.getPropertyByName(newName, self.add_property_root) is None:
                 new_prop = self.custom_properties.add()
                 new_prop.valueType = ID
+                new_prop.deleteOption = True
                 if not self.rootType() == list:
                     new_prop.name = newName
                 # Assign dict

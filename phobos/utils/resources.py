@@ -1,30 +1,15 @@
 import json
 import os
 from .misc import merge_default
-from ..defs import BPY_AVAILABLE
+from ..common.defs import BPY_AVAILABLE
 
 
 def get_resources_path(*filepath):
-    path = None
-    try:
-        try:
-            # Try importing from importlib.resources (Python 3.7+)
-            from importlib.resources import files
-        except:
-            # Try importing from importlib_resources backport
-            from importlib_resources import files
-        path = files("phobos").joinpath(os.path.join("data", *filepath))
-    except:
-        try:
-            # For versions older than Python 3.8, fallback to pkg_resources
-            import pkg_resources
-            path = pkg_resources.resource_filename("phobos", os.path.join("data", *filepath))
-        except:
-            pass
-    if path is None:
-        path = os.path.join(os.path.dirname(__file__), "..", "data")
-        if len(filepath) > 0:
-            path = os.path.join(path, *filepath)
+    # For Blender 4 extensions, use direct path resolution
+    # This is more reliable than importlib.resources when running as an extension
+    path = os.path.join(os.path.dirname(__file__), "..", "data")
+    if len(filepath) > 0:
+        path = os.path.join(path, *filepath)
     return os.path.normpath(path)
 
 
@@ -104,8 +89,8 @@ def get_default_export_config(version="default"):
     return DEFAULTS["export_config"][version]
 
 
-def get_default_rel_mesh_pathes():
-    return DEFAULTS["rel_mesh_pathes"]
+def get_default_rel_mesh_paths():
+    return DEFAULTS["rel_mesh_paths"]
 
 
 def get_blender_resources_path(*filepath):

@@ -46,7 +46,7 @@ class DisplayInformationOperator(Operator):
         context.area.tag_redraw()
 
         if not self.running:
-            from phobos.blender.phoboslog import log
+            from ..phoboslog import log
 
             bpy.types.SpaceView3D.draw_handler_remove(self._handle2d, 'WINDOW')
             bpy.types.SpaceView3D.draw_handler_remove(self._handle3d, 'WINDOW')
@@ -72,13 +72,11 @@ class DisplayInformationOperator(Operator):
         Returns:
 
         """
-        from phobos.blender.phoboslog import log
+        from ..phoboslog import log
 
         wm = context.window_manager
 
         if context.area.type != 'VIEW_3D':
-            from phobos.blender.phoboslog import log
-
             log("View3D not found, cannot run " + self.bl_idname, 'WARNING')
             return {'CANCELLED'}
 

@@ -23,7 +23,7 @@ def main(args):
     from phobos.utils import resources
     from phobos.defs import load_json
     from phobos.core import Robot
-    from ..commandline_logging import setup_logger_level, BASE_LOG_LEVEL
+    from ..common.commandline_logging import setup_logger_level, BASE_LOG_LEVEL
 
     def invertJoint(urdfpath, name):
         try:

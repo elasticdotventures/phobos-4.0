@@ -12,8 +12,26 @@
 """
 Handles different import attempts to cope with Blender's *Reload script* functionality.
 """
+print("=" * 80)
+print("PHOBOS MODULE __init__.py STARTING")
+print("=" * 80)
 import sys
 import subprocess
+print(f"PHOBOS: __name__ = {__name__}")
+print(f"PHOBOS: __file__ = {__file__}")
+
+# Re-export common modules for backward compatibility
+# This allows 'from . import defs' to still work while the actual modules
+# are now in the 'common' subpackage to comply with Blender 4.x extension policy
+print("PHOBOS: About to import from .common")
+try:
+    from .common import commandline_logging, defs
+    print(f"PHOBOS: Successfully imported from .common (defs={defs})")
+except Exception as e:
+    print(f"PHOBOS: FAILED to import from .common: {type(e).__name__}: {e}")
+    import traceback
+    traceback.print_exc()
+    raise
 
 BPY_AVAILABLE = False
 try:
@@ -23,15 +41,15 @@ except ImportError:
     pass
 
 # Phobos information
-version = '2.0.0 "Perilled Pangolin"'
+version = '4.0.0 "Perilled Pangolin"'
 repository = 'https://github.com/dfki-ric/phobos'
 
 bl_info = {
-    "name": "Phobos",
+    "name": "Phobos 4",
     "description": "A toolbox to enable editing of robot models in Blender.",
     "author": "Kai von Szadkowski, Henning Wiedemann, Malte Langosz, Simon Reichel, Julius Martensen, et. al.",
-    "version": (2, 0, 0),
-    "blender": (3, 3),
+    "version": (4, 0, 0),
+    "blender": (4, 2, 0),
     "location": "Phobos adds a custom tool panel.",
     "warning": "",
     "wiki_url": "https://github.com/dfki-ric/phobos/wiki",
@@ -89,6 +107,8 @@ def install_requirement(package_name, upgrade_pip=False, lib=None, ensure_pip=Tr
 
 def check_requirements(optional=False, extra=False, force=False, upgrade_pip=False, lib=None, install=True):
     import importlib
+    import importlib.util
+    import importlib.machinery
     print("Checking requirements:")
     # Ensure pip is installed
     try:
@@ -249,12 +269,16 @@ if BPY_AVAILABLE:
         from . import utils
         from . import ci
         from . import scripts
-        check_requirements(optional=True, upgrade_pip=False, extra=False, install=False)
+        check_requirements(optional=False, upgrade_pip=False, extra=False, install=False)
     except ImportError as e:
-        # this is the first installation in blender so we check the requirements
-        check_requirements(optional=True, upgrade_pip=True, extra=False, install=True)
-
-        print('\033[92m'+'\033[1m'+"Phobos:"+ installation_finished_message+'\033[0m')
+        missing_req = str(e).replace("Uninstalled requirement:", "").strip()
+        message = (
+            f"Missing required Python package for Phobos: {missing_req}.\n"
+            "Install dependencies by running Blender's Python with "
+            "`install_requirements.py` or pip-install them into the shared scripts/modules directory."
+        )
+        print(message)
+        raise ImportError(message) from e
 else:
         from . import defs
         from . import io
@@ -264,4 +288,9 @@ else:
         from . import ci
         from . import scripts
 
+print("PHOBOS: About to delete sys")
 del sys
+print("="  * 80)
+print("PHOBOS MODULE __init__.py COMPLETED SUCCESSFULLY")
+print(f"PHOBOS: Module __name__ at end = {__name__}")
+print("=" * 80)

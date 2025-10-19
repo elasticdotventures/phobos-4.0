@@ -1,0 +1,29 @@
+schema_version = "1.0.0"
+
+id = "phobos_4"
+version = "4.0.0"
+type = "add-on"
+name = "Phobos 4"
+tagline = "Robot modeling toolkit for Blender"
+license = ["BSD-3-Clause"]
+tags = ["Rigging", "Import-Export", "Robotics"]
+blender_version_min = "4.2.0"
+maintainer = "Elastic Ventures <brianh@elastic.ventures>"
+
+[[maintainers]]
+name = "Elastic Ventures"
+email = "brianh@elastic.ventures"
+
+website = "https://github.com/elasticdotventures/phobos-4.0"
+issue_tracker = "https://github.com/elasticdotventures/phobos-4.0/issues"
+documentation = "https://github.com/elasticdotventures/phobos-4.0#readme"
+
+# Python dependencies bundled as wheels
+wheels = [
+  "./wheels/numpy-2.3.4-cp311-cp311-win_amd64.whl",
+  "./wheels/scipy-1.16.2-cp311-cp311-win_amd64.whl",
+  "./wheels/pyyaml-6.0.3-cp311-cp311-win_amd64.whl",
+  "./wheels/pycollada-0.9.2-py3-none-any.whl",
+  "./wheels/pydot-4.0.1-py3-none-any.whl",
+  "./wheels/pyparsing-3.2.5-py3-none-any.whl",
+]

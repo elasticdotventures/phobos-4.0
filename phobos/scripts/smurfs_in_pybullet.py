@@ -1,7 +1,7 @@
 #!python3
 
 
-from ..defs import check_pybullet_available
+from ..common.defs import check_pybullet_available
 
 
 def can_be_used():
@@ -21,7 +21,7 @@ def main(args):
 
     import argparse
     import os
-    from ..commandline_logging import setup_logger_level, BASE_LOG_LEVEL
+    from ..common.commandline_logging import setup_logger_level, BASE_LOG_LEVEL
 
     parser = argparse.ArgumentParser(description=INFO, prog="phobos " + os.path.basename(__file__)[:-3])
     parser.add_argument('smurfs', type=str, help='Path to the smurfs file', default="pipeline.yml")

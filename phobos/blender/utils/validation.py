@@ -13,7 +13,7 @@ from copy import deepcopy as dc
 
 import bpy
 
-from .. import defs
+from ...common import defs
 from ..phoboslog import log
 from ..utils import naming as nUtils
 
@@ -584,8 +584,8 @@ def validateInertiaData(obj, *args, adjust=False):
       tuple: list of :class:`ValidateMessage`\ s and the fixed dictionary/object
 
     """
-    from phobos.blender.model.inertia import inertiaListToMatrix, inertiaMatrixToList
-    from phobos.blender.utils.io import getExpSettings
+    from ..model.inertia import inertiaListToMatrix, inertiaMatrixToList
+    from .io import getExpSettings
     import numpy
 
     errors = []
