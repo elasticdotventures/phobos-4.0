@@ -8,7 +8,7 @@ try:
 except ImportError:
     pass  # trimesh is optional
 
-from phobos.utils.transform import angle_between_vectors
+from .transform import angle_between_vectors
 
 
 def calculateBoxInertia(mass, size):

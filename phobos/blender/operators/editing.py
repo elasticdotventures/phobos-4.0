@@ -32,9 +32,11 @@ from bpy.props import (
 )
 from bpy.types import Operator, PropertyGroup
 from idprop.types import IDPropertyGroup
-from phobos.io import hyrodyn
+from ...io import hyrodyn
 
-from ..common import defs as defs, phobosgui
+from ...common import defs as common_defs
+from .. import defs
+from .. import phobosgui
 from .. import display as display
 from ..io import phobos2blender, blender2phobos
 from ..model import controllers as controllermodel

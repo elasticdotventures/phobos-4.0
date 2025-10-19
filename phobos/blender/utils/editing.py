@@ -18,7 +18,7 @@ import math
 import bpy
 import mathutils
 
-from ..common import defs
+from .. import defs
 from ..phoboslog import log
 from ..utils import blender as bUtils
 from ..utils import io as ioUtils

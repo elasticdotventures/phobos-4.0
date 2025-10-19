@@ -40,27 +40,52 @@ def install_wheels():
 
 
 # Try to import phobos using relative import (no sys.path modification needed)
-phobos = None
+print("="*70)
+print("PHOBOS LOADER v2.3 - FIXED MODULE SHADOWING BUG")
+print("="*70)
+
+# Clear any cached phobos modules from previous installations
+print("Phobos: Clearing module cache...")
+import sys as _sys
+_module_prefix = __name__ + ".phobos"
+_cached_modules = [key for key in _sys.modules.keys() if key.startswith(_module_prefix)]
+for _mod_name in _cached_modules:
+    print(f"Phobos: Removing cached module: {_mod_name}")
+    del _sys.modules[_mod_name]
+print(f"Phobos: Cleared {len(_cached_modules)} cached modules")
+
+# Use different variable name to avoid any shadowing issues
+_phobos_module = None
 try:
     print("Phobos: Attempting to import phobos package...")
-    from . import phobos
-    print("Phobos: Successfully imported phobos package")
+    from . import phobos as _phobos_module
+    print(f"Phobos: Import statement completed without exception")
+    print(f"Phobos: _phobos_module variable = {_phobos_module}")
+    print(f"Phobos: type(_phobos_module) = {type(_phobos_module)}")
+    if _phobos_module:
+        print(f"Phobos: Module file: {getattr(_phobos_module, '__file__', 'NO __file__')}")
+        print(f"Phobos: Has register: {hasattr(_phobos_module, 'register')}")
+        print(f"Phobos: Has bl_info: {hasattr(_phobos_module, 'bl_info')}")
 except ImportError as e:
     print(f"Phobos: Import error - {type(e).__name__}: {e}")
+    print(f"Phobos: Full error: {repr(e)}")
+    import traceback
+    print("Phobos: Full traceback:")
+    traceback.print_exc()
     if "scipy" in str(e) or "numpy" in str(e) or "yaml" in str(e):
         print("Phobos: Installing required dependencies...")
         if install_wheels():
             print("Phobos: Dependencies installed, please restart Blender to activate the addon.")
             # Try import again after install
             try:
-                from . import phobos
-                print("Phobos: Successfully imported after installing dependencies")
+                from . import phobos as _phobos_module
+                print(f"Phobos: Successfully imported after installing dependencies")
             except ImportError as e2:
                 print(f"Phobos: Still failed after dependency install: {e2}")
-                phobos = None
+                _phobos_module = None
         else:
             print("Phobos: Failed to install dependencies")
-            phobos = None
+            _phobos_module = None
     else:
         print(f"Phobos: Unexpected import error, re-raising: {e}")
         import traceback
@@ -72,8 +97,10 @@ except Exception as e:
     traceback.print_exc()
     raise
 
+print(f"Phobos: After import attempts, _phobos_module = {_phobos_module}")
+
 # Expose bl_info for Blender
-bl_info = phobos.bl_info if phobos else {
+bl_info = _phobos_module.bl_info if _phobos_module else {
     "name": "Phobos 4",
     "description": "Installing dependencies... Please restart Blender.",
     "author": "DFKI RIC",
@@ -87,10 +114,10 @@ def register() -> None:
     """Register the Phobos addon."""
     print("Phobos: register() called")
     global __addon_enabled__
-    if phobos:
-        print("Phobos: Calling phobos.register()...")
+    if _phobos_module:
+        print(f"Phobos: Calling _phobos_module.register() (module={_phobos_module})...")
         try:
-            phobos.register()
+            _phobos_module.register()
             __addon_enabled__ = True
             print("Phobos: Successfully registered!")
         except Exception as e:
@@ -99,7 +126,7 @@ def register() -> None:
             traceback.print_exc()
             raise
     else:
-        print("Phobos: phobos module is None - dependencies may need to be installed")
+        print("Phobos: _phobos_module is None - dependencies may need to be installed")
         print("Phobos: Please restart Blender to complete activation")
         # Note: Cannot show popup during extension loading as context is not available
 
@@ -107,8 +134,8 @@ def register() -> None:
 def unregister() -> None:
     """Unregister the Phobos addon."""
     global __addon_enabled__
-    if phobos:
-        phobos.unregister()
+    if _phobos_module:
+        _phobos_module.unregister()
     __addon_enabled__ = False
 
 

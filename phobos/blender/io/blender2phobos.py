@@ -3,7 +3,7 @@ from copy import deepcopy
 
 import bpy
 import numpy as np
-from phobos.io import hyrodyn
+from ...io import hyrodyn
 
 from .. import reserved_keys
 from ..model import inertia as inertiamodel

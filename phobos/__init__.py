@@ -12,13 +12,26 @@
 """
 Handles different import attempts to cope with Blender's *Reload script* functionality.
 """
+print("=" * 80)
+print("PHOBOS MODULE __init__.py STARTING")
+print("=" * 80)
 import sys
 import subprocess
+print(f"PHOBOS: __name__ = {__name__}")
+print(f"PHOBOS: __file__ = {__file__}")
 
 # Re-export common modules for backward compatibility
 # This allows 'from . import defs' to still work while the actual modules
 # are now in the 'common' subpackage to comply with Blender 4.x extension policy
-from .common import commandline_logging, defs
+print("PHOBOS: About to import from .common")
+try:
+    from .common import commandline_logging, defs
+    print(f"PHOBOS: Successfully imported from .common (defs={defs})")
+except Exception as e:
+    print(f"PHOBOS: FAILED to import from .common: {type(e).__name__}: {e}")
+    import traceback
+    traceback.print_exc()
+    raise
 
 BPY_AVAILABLE = False
 try:
@@ -275,4 +288,9 @@ else:
         from . import ci
         from . import scripts
 
+print("PHOBOS: About to delete sys")
 del sys
+print("="  * 80)
+print("PHOBOS MODULE __init__.py COMPLETED SUCCESSFULLY")
+print(f"PHOBOS: Module __name__ at end = {__name__}")
+print("=" * 80)

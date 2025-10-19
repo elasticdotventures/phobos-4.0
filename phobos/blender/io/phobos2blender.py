@@ -4,7 +4,7 @@ import bpy
 import mathutils
 import numpy as np
 
-from ..common import defs
+from .. import defs
 from .. import reserved_keys
 from ..model import joints as jointmodel
 from ..model.materials import assignMaterial

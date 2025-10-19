@@ -17,7 +17,8 @@ import bpy
 from bpy.props import EnumProperty, StringProperty
 from bpy.types import Operator
 
-from ..common import defs as defs
+from ...common import defs as common_defs
+from .. import defs
 from ..phoboslog import log
 from ..utils import blender as bUtils
 from ..utils import naming as nUtils

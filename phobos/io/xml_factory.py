@@ -5,15 +5,16 @@ except ImportError:
     QName = None
 
 import json
+import os
 from typing import List
 from copy import deepcopy
 
 import numpy as np
-import pkg_resources
 
 from ..common.defs import KINEMATIC_TYPES
 from .base import Representation, Linkable
 from ..utils.misc import to_pretty_xml_string, patch_dict, get_var, deserialize, is_int, is_float, plural, singular
+from ..utils.resources import get_resources_path
 
 from ..common.commandline_logging import get_logger
 log = get_logger(__name__)
@@ -32,7 +33,7 @@ XML_REFLECTIONS = {
         "write": True
     }
 }
-FORMATS = json.load(open(pkg_resources.resource_filename("phobos", "data/xml_formats.json"), "r"))
+FORMATS = json.load(open(get_resources_path("xml_formats.json"), "r"))
 
 REGISTERED_CLASSES = {}
 

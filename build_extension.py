@@ -22,7 +22,7 @@ def build_extension():
     root_dir = Path(__file__).parent
     build_dir = root_dir / "build" / "extension"
     dist_dir = root_dir / "dist"
-    extension_id = "elasticdotventures_phobos_4"
+    extension_id = "phobos_4"
     extension_dir = build_dir / extension_id
 
     print(f"Building Phobos 4 Blender extension...")

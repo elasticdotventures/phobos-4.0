@@ -2,7 +2,6 @@ import os
 from copy import deepcopy
 
 import numpy as np
-import pkg_resources
 import pydot
 import traceback
 import re
@@ -16,6 +15,7 @@ except ImportError:
 from .. import geometry as pgu, utils
 from ..common.commandline_logging import get_logger
 from ..common.defs import load_json, dump_json, KINEMATIC_TYPES
+from ..utils.resources import get_resources_path
 from ..geometry import get_reflection_matrix
 from ..io import representation, sensor_representations
 from ..io.hyrodyn import Submechanism
@@ -869,7 +869,7 @@ class Robot(SMURFRobot):
         directories = [os.path.relpath(dir, outputdir) for dir, _, _ in os.walk(outputdir)]
         if (cmake is None and not os.path.isfile(ros_cmake)) or cmake: # if we want to keep that we can put it to the keep_files
             log.info("Creating default CMakeLists.txt for ROS")
-            misc.copy(None, pkg_resources.resource_filename("phobos", "data/ROSCMakeLists.txt.in"),
+            misc.copy(None, get_resources_path("ROSCMakeLists.txt.in"),
                       ros_cmake)
             with open(ros_cmake, "r") as cmake:
                 content = cmake.read()
@@ -885,7 +885,7 @@ class Robot(SMURFRobot):
         packagexml_path = os.path.join(outputdir, "package.xml")
         if (package_xml is None and not os.path.isfile(packagexml_path)) or package_xml:
             log.info("Creating default package.xml for ROS")
-            misc.copy(None, pkg_resources.resource_filename("phobos", "data/ROSpackage.xml.in"),
+            misc.copy(None, get_resources_path("ROSpackage.xml.in"),
                       packagexml_path)
             with open(packagexml_path, "r") as packagexml:
                 content = packagexml.read()
@@ -2620,7 +2620,7 @@ class Robot(SMURFRobot):
         Returns a copy of this robot with a floatingbase mechanisms prepended
         :return: instance of robot
         """
-        floatingbase = type(self)(xmlfile=pkg_resources.resource_filename("phobos", "data/floatingbase.urdf"))
+        floatingbase = type(self)(xmlfile=get_resources_path("floatingbase.urdf"))
         connector = representation.Joint(
             name="FreeFlyerRZ",
             parent="FreeFlyerRY_Link",

@@ -1,6 +1,6 @@
 schema_version = "1.0.0"
 
-id = "elasticdotventures_phobos_4"
+id = "phobos_4"
 version = "4.0.0"
 type = "add-on"
 name = "Phobos 4"

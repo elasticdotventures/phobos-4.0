@@ -13,13 +13,13 @@ import os
 
 import bpy
 
-from ..common import defs
+from .. import defs
 from ..phoboslog import log
 from ..utils import blender as bUtils
 from ..utils import naming as nUtils
 from ..utils import selection as sUtils
 
-from ...defs import EXPORT_TYPES, IMPORT_TYPES, SCENE_TYPES, MESH_TYPES
+from ...common.defs import EXPORT_TYPES, IMPORT_TYPES, SCENE_TYPES, MESH_TYPES
 from ...utils.resources import get_blender_resources_path
 
 

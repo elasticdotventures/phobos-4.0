@@ -20,7 +20,7 @@ import bpy.utils.previews
 from bpy.props import EnumProperty
 from bpy.types import WindowManager
 
-from ..common import defs
+from .. import defs
 from ..phoboslog import log
 from ...utils.resources import get_blender_resources_path
 
