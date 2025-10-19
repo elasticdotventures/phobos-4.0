@@ -36,11 +36,11 @@ def create_box(mesh, oriented=False, scale=1.0):
     """
     Create a box element.
     """
-    assert not oriented or isinstance(mesh, trimesh.Trimesh)
+    assert not oriented or (trimesh is not None and isinstance(mesh, trimesh.Trimesh))
     # [TODO v2.1.0] Fix creation for Trimesh
     if type(scale) in [int, float]:
         scale = [scale] * 3
-    if isinstance(mesh, trimesh.Trimesh) or isinstance(mesh, trimesh.Scene):
+    if trimesh is not None and (isinstance(mesh, trimesh.Trimesh) or isinstance(mesh, trimesh.Scene)):
         # scale the mesh
         mesh = deepcopy(mesh)
         mesh.apply_transform(np.diag(scale + [1]))
@@ -67,7 +67,7 @@ def create_sphere(mesh, scale=1.0):
     # [TODO v2.1.0] Fix creation for Trimesh
     if type(scale) in [int, float]:
         scale = [scale] * 3
-    if isinstance(mesh, trimesh.Trimesh) or isinstance(mesh, trimesh.Scene):
+    if trimesh is not None and (isinstance(mesh, trimesh.Trimesh) or isinstance(mesh, trimesh.Scene)):
         # scale the mesh
         mesh = deepcopy(mesh)
         #mesh.apply_transform(np.diag(scale + [1]))
@@ -93,7 +93,7 @@ def create_cylinder(mesh, scale=1.0):
     # [TODO v2.1.0] Fix creation for Trimesh
     if type(scale) in [int, float]:
         scale = [scale] * 3
-    if isinstance(mesh, trimesh.Trimesh) or isinstance(mesh, trimesh.Scene):
+    if trimesh is not None and (isinstance(mesh, trimesh.Trimesh) or isinstance(mesh, trimesh.Scene)):
         # scale the mesh
         mesh = deepcopy(mesh)
         #mesh.apply_transform(np.diag(scale + [1]))
@@ -124,6 +124,8 @@ def create_cylinder(mesh, scale=1.0):
 
 
 def get_reflection_matrix(point=np.array((0, 0, 0)), normal=np.array((0, 1, 0))):
+    if trimesh is None:
+        raise ImportError("trimesh is required for get_reflection_matrix but is not installed")
     return trimesh.transformations.reflection_matrix(point, normal)
 
 
@@ -164,8 +166,8 @@ def identical(mesh_a, mesh_b):
     if mesh_a == mesh_b:
         return True
     assert mesh_a is not None and mesh_b is not None
-    assert isinstance(mesh_a, trimesh.Trimesh) and isinstance(mesh_b, trimesh.Trimesh) or\
-        isinstance(mesh_a, trimesh.Scene) and isinstance(mesh_b, trimesh.Scene)
+    assert trimesh is not None and (isinstance(mesh_a, trimesh.Trimesh) and isinstance(mesh_b, trimesh.Trimesh) or\
+        isinstance(mesh_a, trimesh.Scene) and isinstance(mesh_b, trimesh.Scene))
     out = (
         (
             len(mesh_a.vertices.flatten()) == len(mesh_b.vertices.flatten()) and
@@ -176,9 +178,12 @@ def identical(mesh_a, mesh_b):
         )
     )
     try:
-        trimesh_out = (
-            all(trimesh.comparison.identifier_simple(mesh_a) == trimesh.comparison.identifier_simple(mesh_b))
-        )
+        if trimesh is not None:
+            trimesh_out = (
+                all(trimesh.comparison.identifier_simple(mesh_a) == trimesh.comparison.identifier_simple(mesh_b))
+            )
+        else:
+            trimesh_out = False
     except:
         # trimesh sometimes does utter sh** so we catch this here and assume false to be on the safe side
         trimesh_out = False
