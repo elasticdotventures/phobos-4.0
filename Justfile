@@ -1,28 +1,24 @@
 set shell := ["bash", "-lc"]
 
-cache_dir := ".uv-cache"
+# Build Blender 4.x extension (default)
+build: build-extension
 
-# Prepare uv-managed environment
-sync:
-	uv sync --extra dev
-
-# Build wheel artifact into dist/
-build-wheel:
-	UV_CACHE_DIR={{cache_dir}} uv run python -m build --wheel
-
-# Package add-on zip for legacy installer
-zip-addon:
-	mkdir -p dist
-	rm -f dist/phobos-addon.zip
-	zip -r dist/phobos-addon.zip phobos bl_ext blender_manifest.toml
-
-# Build Blender extension archive using blender-extension-builder
+# Build Blender extension archive
 build-extension:
-	if [ -n "${BLENDER_PATH:-}" ]; then \
-		PATH="$$(dirname "$$BLENDER_PATH"):$${PATH}" build-blender-extension -m blender_manifest.toml -d dist; \
-	elif command -v blender >/dev/null 2>&1; then \
-		build-blender-extension -m blender_manifest.toml -d dist; \
-	else \
-		echo "Blender executable not found. Set BLENDER_PATH or add blender to PATH." >&2; \
+	python3 build_extension.py
+
+# Clean build artifacts
+clean:
+	rm -rf build/ dist/ *.egg-info .uv-cache
+
+# Install extension directly to Blender (requires BLENDER_EXTENSIONS_PATH)
+install: build-extension
+	@if [ -z "${BLENDER_EXTENSIONS_PATH}" ]; then \
+		echo "Error: BLENDER_EXTENSIONS_PATH not set. Example:"; \
+		echo "  export BLENDER_EXTENSIONS_PATH=\"\$$APPDATA/Blender Foundation/Blender/4.5/extensions/user_default\""; \
 		exit 1; \
 	fi
+	@mkdir -p "${BLENDER_EXTENSIONS_PATH}"
+	@echo "Installing to: ${BLENDER_EXTENSIONS_PATH}/phobos_4"
+	@unzip -o dist/phobos_4.zip -d "${BLENDER_EXTENSIONS_PATH}"
+	@echo "✓ Extension installed successfully!"
