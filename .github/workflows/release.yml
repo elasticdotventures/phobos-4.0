@@ -1,0 +1,183 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+
+jobs:
+  create-release:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install requests
+
+    - name: Extract version from tag
+      id: get_version
+      run: |
+        VERSION=${GITHUB_REF#refs/tags/v}
+        echo "VERSION=$VERSION" >> $GITHUB_OUTPUT
+        echo "TAG=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
+
+    - name: Build extension
+      run: |
+        python build_extension.py
+
+    - name: Verify build
+      run: |
+        ls -lh dist/
+        if [ ! -f "dist/phobos_4.zip" ]; then
+          echo "❌ Error: phobos_4.zip not found!"
+          exit 1
+        fi
+        echo "✅ Extension built successfully"
+
+    - name: Generate changelog
+      id: changelog
+      run: |
+        # Get previous tag
+        PREV_TAG=$(git describe --tags --abbrev=0 HEAD^ 2>/dev/null || echo "")
+
+        if [ -z "$PREV_TAG" ]; then
+          echo "## Changes" > CHANGELOG.md
+          echo "Initial release" >> CHANGELOG.md
+        else
+          echo "## Changes since $PREV_TAG" > CHANGELOG.md
+          echo "" >> CHANGELOG.md
+          git log $PREV_TAG..HEAD --pretty=format:"- %s (%h)" >> CHANGELOG.md
+        fi
+
+        echo "" >> CHANGELOG.md
+        echo "" >> CHANGELOG.md
+        echo "**Full Changelog**: https://github.com/${{ github.repository }}/compare/$PREV_TAG...${{ steps.get_version.outputs.TAG }}" >> CHANGELOG.md
+
+    - name: Create Release Notes
+      run: |
+        cat > RELEASE_NOTES.md << 'EOFNOTES'
+        # 🤖 Phobos 4.x - Blender Extension v${{ steps.get_version.outputs.VERSION }}
+
+        ## 📦 Installation
+
+        ### Quick Install
+        1. Download `phobos_4.zip` below
+        2. In Blender 4.2+: `Edit` → `Preferences` → `Get Extensions`
+        3. Click dropdown (top right) → `Install from Disk`
+        4. Select the downloaded `phobos_4.zip`
+        5. Restart Blender (recommended)
+
+        ### Verify Installation
+        After installation, you should see:
+        - Phobos panel in Scene Properties
+        - Phobos tools in the 3D View sidebar (press `N`)
+        - Phobos menu items in File → Import/Export
+
+        ## ✨ What's Included
+
+        - ✅ Full Blender 4.2+ / 5.0 compatibility
+        - ✅ Native extension system integration
+        - ✅ Robot model creation and editing tools
+        - ✅ URDF/SMURF/SDF export and import
+        - ✅ Material and visual editing
+        - ✅ Mechanism and joint configuration
+        - ✅ Inertia calculation tools
+
+        ## 🔧 Compatibility
+
+        | Blender Version | Status |
+        |----------------|--------|
+        | 4.2.x | ✅ Fully tested |
+        | 4.3.x | ✅ Fully tested |
+        | 4.4.x | ✅ Fully tested |
+        | 4.5.x | ✅ Fully tested |
+        | 5.0.x | ✅ Tested |
+        | 3.x | ❌ Not compatible |
+
+        ## 📋 System Requirements
+
+        - **Blender**: 4.2 or higher
+        - **Python**: 3.10+ (bundled with Blender)
+        - **OS**: Windows 10+, macOS 10.15+, Linux
+        - **Disk Space**: ~50 MB
+
+        ## 📚 Documentation
+
+        - [Installation Guide](https://github.com/elasticdotventures/phobos-4.0/blob/main/BLENDER_4X_FORK.md)
+        - [Original Phobos Wiki](https://github.com/dfki-ric/phobos/wiki)
+        - [URDF Export Guide](https://github.com/dfki-ric/phobos/wiki/ExportURDF)
+
+        ## 🐛 Known Issues
+
+        None reported for this version. If you encounter issues, please report them on [GitHub Issues](https://github.com/elasticdotventures/phobos-4.0/issues).
+
+        ## 💬 Support
+
+        - **Bug Reports**: [GitHub Issues](https://github.com/elasticdotventures/phobos-4.0/issues)
+        - **Questions**: [GitHub Discussions](https://github.com/elasticdotventures/phobos-4.0/discussions)
+        - **Original Phobos**: [DFKI Phobos](https://github.com/dfki-ric/phobos)
+
+        EOFNOTES
+
+        # Append changelog
+        echo "" >> RELEASE_NOTES.md
+        cat CHANGELOG.md >> RELEASE_NOTES.md
+
+        # Append build info
+        cat >> RELEASE_NOTES.md << 'EOFBUILD'
+
+        ---
+
+        ## 🔨 Build Information
+
+        **Commit SHA**: ${{ github.sha }}
+        **Build Date**: $(date -u +"%Y-%m-%d %H:%M:%S UTC")
+        **Python Version**: 3.11
+        **Builder**: GitHub Actions
+
+        EOFBUILD
+
+    - name: Create checksum
+      run: |
+        cd dist
+        sha256sum phobos_4.zip > phobos_4.zip.sha256
+        cat phobos_4.zip.sha256
+
+    - name: Create GitHub Release
+      uses: softprops/action-gh-release@v1
+      with:
+        files: |
+          dist/phobos_4.zip
+          dist/phobos_4.zip.sha256
+        body_path: RELEASE_NOTES.md
+        draft: false
+        prerelease: ${{ contains(steps.get_version.outputs.VERSION, 'alpha') || contains(steps.get_version.outputs.VERSION, 'beta') || contains(steps.get_version.outputs.VERSION, 'rc') }}
+        name: Phobos 4.x v${{ steps.get_version.outputs.VERSION }}
+        generate_release_notes: false
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Release Summary
+      run: |
+        echo "## 🎉 Release Created Successfully!" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "**Version**: v${{ steps.get_version.outputs.VERSION }}" >> $GITHUB_STEP_SUMMARY
+        echo "**Extension**: phobos_4.zip" >> $GITHUB_STEP_SUMMARY
+        echo "**Commit**: ${{ github.sha }}" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "### 📥 Download" >> $GITHUB_STEP_SUMMARY
+        echo "The release is now available at:" >> $GITHUB_STEP_SUMMARY
+        echo "https://github.com/${{ github.repository }}/releases/tag/${{ steps.get_version.outputs.TAG }}" >> $GITHUB_STEP_SUMMARY
