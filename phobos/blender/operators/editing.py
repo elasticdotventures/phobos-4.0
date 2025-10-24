@@ -1632,20 +1632,21 @@ class DefineJointConstraintsOperator(Operator):
         name='Flip Visual Axis', default=False, description='Flip calculated axis'
     )
 
-    def __init__(self):
-        self.sRefBody = False  # Show gearbox options: reference body drop down and gearbox ratio
-        self.sAxis = False  # Show first axis
-        self.sLimit = False  # Show axis limits
-        self.sLimitEqual = False  # Upper and lower limits are the same
-        self.sEffort = False  # Show max axis effort (N or Nm)
-        self.sVelocity = False  # Show max axis velocity (meters/s or angle/s)
-        self.isAngle = False  # Rotating joint, affects max velocity, effort and limits
-        self.sAxis2 = False  # Show second axis
-        self.sSpring = False  # Show spring
-        self.sDamping = False  # Show damping
-        self.sThreadPitch = False  # Show screw parameter
-        self.sAxisFlip = False  # Show checkbox to flip calculated axis
-        self.setOptionalParameters()
+    
+    sRefBody: BoolProperty(default=False) # Show gearbox options: reference body drop down and gearbox ratio
+    sAxis: BoolProperty(default=False) # Show first axis
+    sRefBody: BoolProperty(default=False)  # Show gearbox options: reference body drop down and gearbox ratio
+    sAxis: BoolProperty(default=False)  # Show first axis
+    sLimit: BoolProperty(default=False)  # Show axis limits
+    sLimitEqual: BoolProperty(default=False)  # Upper and lower limits are the same
+    sEffort: BoolProperty(default=False)  # Show max axis effort (N or Nm)
+    sVelocity: BoolProperty(default=False)  # Show max axis velocity (meters/s or angle/s)
+    isAngle: BoolProperty(default=False)  # Rotating joint, affects max velocity, effort and limits
+    sAxis2: BoolProperty(default=False)  # Show second axis
+    sSpring: BoolProperty(default=False)  # Show spring
+    sDamping: BoolProperty(default=False)  # Show damping
+    sThreadPitch: BoolProperty(default=False)  # Show screw parameter
+    sAxisFlip: BoolProperty(default=False)  # Show checkbox to flip calculated axis
 
     executeMessage = []
 
@@ -1707,6 +1708,26 @@ class DefineJointConstraintsOperator(Operator):
         Returns:
 
         """
+        # get joint properties
+        obj = context.active_object
+        # Only populate default values if the user hasn't typed anything yet
+        if not self.name:
+            self.name = obj.get("joint/name", obj.name)
+        if any([k.startswith("joint") for k in obj.keys()]):
+            if "joint/limits/lower" in obj:
+                self.lower = obj["joint/limits/lower"]
+            if "joint/limits/upper" in obj:
+                self.upper = obj["joint/limits/upper"]
+            if "joint/limits/effort" in obj:
+                self.maxeffort = obj["joint/limits/effort"]
+            if "joint/limits/velocity" in obj:
+                self.maxspeed = obj["joint/limits/velocity"]
+            if "joint/type" in obj:
+                self.joint_type = obj["joint/type"]
+            if "joint/axis" in obj:
+                self.axis = obj["joint/axis"]
+            self.name = obj.get("joint/name", obj.name)
+
         layout = self.layout
         for msg in self.executeMessage:
             layout.label(text=msg)
@@ -1831,23 +1852,7 @@ class DefineJointConstraintsOperator(Operator):
         Returns:
 
         """
-        obj = context.active_object
-        self.name = ""
-        if any([k.startswith("joint") for k in obj.keys()]):
-            if "joint/limits/lower" in obj:
-                self.lower = obj["joint/limits/lower"]
-            if "joint/limits/upper" in obj:
-                self.upper = obj["joint/limits/upper"]
-            if "joint/limits/effort" in obj:
-                self.maxeffort = obj["joint/limits/effort"]
-            if "joint/limits/velocity" in obj:
-                self.maxspeed = obj["joint/limits/velocity"]
-            if "joint/type" in obj:
-                self.joint_type = obj["joint/type"]
-            if "joint/axis" in obj:
-                self.axis = obj["joint/axis"]
-            self.name = obj.get("joint/name", obj.name)
-        return self.execute(context)
+        return context.window_manager.invoke_props_dialog(self)
 
     def execute(self, context):
         """
